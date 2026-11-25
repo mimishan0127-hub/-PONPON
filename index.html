@@ -29,6 +29,15 @@
       user-select: auto;
       font-size: 16px !important;
     }
+    .compact-field {
+      transform: scale(0.84);
+      transform-origin: center;
+    }
+    .compact-select {
+      transform: scale(0.88);
+      transform-origin: left center;
+      width: 113.6%;
+    }
     .tabular-nums { font-variant-numeric: tabular-nums; }
     .safe-top { padding-top: max(0.75rem, env(safe-area-inset-top)); }
     .safe-bottom { padding-bottom: max(0.5rem, env(safe-area-inset-bottom)); }
@@ -203,8 +212,8 @@
             <input v-model.trim="cloudForm.url" placeholder="https://xxxx.supabase.co" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-3.5 py-2 text-xs font-medium text-slate-900 focus:outline-none focus:border-amber-500" />
           </div>
           <div>
-            <label class="text-[11px] font-semibold text-slate-500 block mb-1">Publishable Key</label>
-            <input v-model.trim="cloudForm.key" placeholder="sb_publishable_..." class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-3.5 py-2 text-xs font-medium text-slate-900 focus:outline-none focus:border-amber-500" />
+            <label class="text-[11px] font-semibold text-slate-500 block mb-1">API Key</label>
+            <input v-model.trim="cloudForm.key" placeholder="sb_publishable_... 或 eyJ..." class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-3.5 py-2 text-xs font-medium text-slate-900 focus:outline-none focus:border-amber-500" />
           </div>
           <div>
             <label class="text-[11px] font-semibold text-slate-500 block mb-1">同步帳號代碼 (多裝置填相同代碼即可互通)</label>
@@ -291,71 +300,73 @@
     </div>
 
     <!-- 主內容區 -->
-    <main class="flex-1 overflow-y-auto px-3.5 pt-3.5 pb-6 space-y-3.5 bg-white">
+    <main class="flex-1 overflow-y-auto px-3.5 pt-3 pb-6 space-y-3 bg-white">
 
-      <!-- ==================== 1. 配方 ==================== -->
-      <section v-show="activeTab === 'calc'" class="space-y-3.5">
+      <!-- ==================== 1. 配方 (字級精緻縮小版) ==================== -->
+      <section v-show="activeTab === 'calc'" class="space-y-3">
         
-        <div class="bg-gradient-to-b from-slate-50 to-slate-100/70 border border-slate-200/75 p-3.5 rounded-3xl space-y-3">
+        <div class="bg-gradient-to-b from-slate-50 to-slate-100/70 border border-slate-200/75 p-3 rounded-3xl space-y-2.5">
           
-          <div v-if="!isEditingRecipeName" class="space-y-2">
-            <select v-model="state.selectedRecipeId" @change="confirmDeleteRecipe = false" class="w-full bg-white border border-slate-200 rounded-2xl px-3.5 py-2.5 font-bold text-slate-900 focus:outline-none focus:border-amber-500">
-              <option v-for="r in state.recipes" :key="r.id" :value="r.id">{{ r.name }}</option>
-            </select>
+          <div v-if="!isEditingRecipeName" class="space-y-1.5">
+            <div class="overflow-hidden rounded-xl bg-white border border-slate-200">
+              <select v-model="state.selectedRecipeId" @change="confirmDeleteRecipe = false" class="compact-select bg-transparent px-3 py-1.5 font-bold text-slate-900 focus:outline-none">
+                <option v-for="r in state.recipes" :key="r.id" :value="r.id">{{ r.name }}</option>
+              </select>
+            </div>
             <div class="grid grid-cols-4 gap-1.5">
-              <button @click="createNewRecipe" class="py-1.5 bg-white border border-slate-200 text-slate-700 font-semibold text-xs rounded-xl active:scale-95 whitespace-nowrap">＋新增</button>
-              <button @click="startRenameRecipe" class="py-1.5 bg-white border border-slate-200 text-slate-700 font-semibold text-xs rounded-xl active:scale-95 whitespace-nowrap">✏️改名</button>
-              <button @click="duplicateRecipe" class="py-1.5 bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200/80 text-amber-700 font-semibold text-xs rounded-xl active:scale-95 whitespace-nowrap">複製</button>
-              <button v-if="state.recipes.length > 1" @click="handleDeleteRecipe" class="py-1.5 font-semibold text-xs rounded-xl active:scale-95 transition whitespace-nowrap" :class="confirmDeleteRecipe ? 'bg-rose-600 text-white' : 'bg-white border border-slate-200 text-rose-600'">
+              <button @click="createNewRecipe" class="py-1 bg-white border border-slate-200 text-slate-700 font-semibold text-[11px] rounded-xl active:scale-95 whitespace-nowrap">＋新增</button>
+              <button @click="startRenameRecipe" class="py-1 bg-white border border-slate-200 text-slate-700 font-semibold text-[11px] rounded-xl active:scale-95 whitespace-nowrap">✏️改名</button>
+              <button @click="duplicateRecipe" class="py-1 bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200/80 text-amber-700 font-semibold text-[11px] rounded-xl active:scale-95 whitespace-nowrap">複製</button>
+              <button v-if="state.recipes.length > 1" @click="handleDeleteRecipe" class="py-1 font-semibold text-[11px] rounded-xl active:scale-95 transition whitespace-nowrap" :class="confirmDeleteRecipe ? 'bg-rose-600 text-white' : 'bg-white border border-slate-200 text-rose-600'">
                 {{ confirmDeleteRecipe ? '確認刪除' : '刪除' }}
               </button>
-              <div v-else class="py-1.5 text-center text-[11px] text-slate-300 bg-slate-100/60 rounded-xl whitespace-nowrap">預設</div>
+              <div v-else class="py-1 text-center text-[10px] text-slate-300 bg-slate-100/60 rounded-xl whitespace-nowrap">預設</div>
             </div>
           </div>
 
-          <form v-else @submit.prevent="saveRenameRecipe" class="flex items-center gap-2">
-            <input ref="renameInputRef" v-model="editingRecipeName" placeholder="輸入新配方名稱" class="flex-1 min-w-0 bg-white border border-amber-400 rounded-2xl px-3.5 py-2 font-bold text-slate-900 focus:outline-none" />
-            <button type="submit" class="px-3.5 py-2 bg-slate-900 text-white text-xs font-bold rounded-2xl shrink-0 whitespace-nowrap">完成</button>
-            <button type="button" @click="isEditingRecipeName = false" class="px-2.5 py-2 bg-white border border-slate-200 text-slate-500 text-xs font-semibold rounded-2xl shrink-0 whitespace-nowrap">取消</button>
+          <form v-else @submit.prevent="saveRenameRecipe" class="flex items-center gap-1.5">
+            <input ref="renameInputRef" v-model="editingRecipeName" placeholder="輸入新配方名稱" class="flex-1 min-w-0 bg-white border border-amber-400 rounded-xl px-3 py-1.5 font-bold text-slate-900 focus:outline-none" />
+            <button type="submit" class="px-3 py-1.5 bg-slate-900 text-white text-[11px] font-bold rounded-xl shrink-0 whitespace-nowrap">完成</button>
+            <button type="button" @click="isEditingRecipeName = false" class="px-2 py-1.5 bg-white border border-slate-200 text-slate-500 text-[11px] font-semibold rounded-xl shrink-0 whitespace-nowrap">取消</button>
           </form>
 
-          <div class="grid grid-cols-2 gap-1 bg-slate-200/70 p-1 rounded-2xl">
-            <button @click="state.calcMode = 'mold'" :class="state.calcMode === 'mold' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500'" class="py-1.5 text-xs font-semibold rounded-xl transition whitespace-nowrap">依模具</button>
-            <button @click="state.calcMode = 'flour'" :class="state.calcMode === 'flour' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500'" class="py-1.5 text-xs font-semibold rounded-xl transition whitespace-nowrap">依總粉重</button>
+          <div class="grid grid-cols-2 gap-1 bg-slate-200/70 p-0.5 rounded-xl">
+            <button @click="state.calcMode = 'mold'" :class="state.calcMode === 'mold' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500'" class="py-1 text-[11px] font-semibold rounded-lg transition whitespace-nowrap">依模具</button>
+            <button @click="state.calcMode = 'flour'" :class="state.calcMode === 'flour' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500'" class="py-1 text-[11px] font-semibold rounded-lg transition whitespace-nowrap">依總粉重</button>
           </div>
 
-          <div v-if="state.calcMode === 'mold'" class="space-y-2">
-            <div class="grid grid-cols-2 gap-2">
-              <div v-for="m in state.molds" :key="m.id" class="bg-white border border-slate-200/70 rounded-2xl px-3 py-2 flex items-center justify-between gap-1">
+          <div v-if="state.calcMode === 'mold'" class="space-y-1.5">
+            <div class="grid grid-cols-2 gap-1.5">
+              <div v-for="m in state.molds" :key="m.id" class="bg-white border border-slate-200/70 rounded-xl px-2.5 py-1.5 flex items-center justify-between gap-1">
                 <div class="min-w-0">
-                  <div class="text-xs font-bold text-slate-800 truncate">{{ m.shortName }}</div>
-                  <div class="text-[11px] text-slate-400 tabular-nums whitespace-nowrap">{{ m.baseDough }}g</div>
+                  <div class="text-[11px] font-bold text-slate-800 truncate">{{ m.shortName }}</div>
+                  <div class="text-[10px] text-slate-400 tabular-nums whitespace-nowrap">{{ m.baseDough }}g</div>
                 </div>
-                <div class="flex items-center gap-1.5 shrink-0">
-                  <button @click="m.qty = Math.max(0, m.qty - 1)" class="w-6 h-6 rounded-full bg-slate-100 text-slate-600 font-bold text-sm active:bg-slate-200">-</button>
-                  <span class="w-4 text-center font-bold text-xs tabular-nums text-slate-900">{{ m.qty }}</span>
-                  <button @click="m.qty++" class="w-6 h-6 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 text-white font-bold text-sm active:opacity-90">+</button>
+                <div class="flex items-center gap-1 shrink-0">
+                  <button @click="m.qty = Math.max(0, m.qty - 1)" class="w-5 h-5 rounded-full bg-slate-100 text-slate-600 font-bold text-xs active:bg-slate-200 flex items-center justify-center">-</button>
+                  <span class="w-3.5 text-center font-bold text-[11px] tabular-nums text-slate-900">{{ m.qty }}</span>
+                  <button @click="m.qty++" class="w-5 h-5 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 text-white font-bold text-xs active:opacity-90 flex items-center justify-center">+</button>
                 </div>
               </div>
             </div>
-            <div v-if="totalActiveMolds === 0" class="text-center text-xs font-semibold text-amber-600 bg-amber-50 border border-amber-200/70 py-2 rounded-2xl">
+            <div v-if="totalActiveMolds === 0" class="text-center text-[11px] font-semibold text-amber-600 bg-amber-50 border border-amber-200/70 py-1.5 rounded-xl">
               請至少選擇 1 個模具以計算重量
             </div>
           </div>
 
-          <div v-else class="flex items-center justify-between bg-white border border-slate-200/70 px-3.5 py-2.5 rounded-2xl">
-            <span class="text-xs font-semibold text-slate-600 whitespace-nowrap">總粉重 (g)</span>
-            <input type="number" v-model.number="state.customFlour" min="50" step="10" class="w-24 text-right font-bold bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1 tabular-nums text-slate-900" />
+          <div v-else class="flex items-center justify-between bg-white border border-slate-200/70 px-3 py-1.5 rounded-xl">
+            <span class="text-[11px] font-semibold text-slate-600 whitespace-nowrap">總粉重 (g)</span>
+            <input type="number" v-model.number="state.customFlour" min="50" step="10" class="compact-field w-24 text-right font-bold bg-slate-50 border border-slate-200 rounded-lg px-2 py-0.5 tabular-nums text-slate-900" />
           </div>
 
-          <div class="flex items-center justify-between gap-2 pt-0.5 text-xs">
-            <label class="flex items-center gap-2 text-slate-600 font-medium cursor-pointer whitespace-nowrap">
-              <input type="checkbox" v-model="currentRecipe.useLossFactor" class="w-4 h-4 accent-amber-600 rounded" />
+          <div class="flex items-center justify-between gap-2 text-[11px]">
+            <label class="flex items-center gap-1.5 text-slate-600 font-medium cursor-pointer whitespace-nowrap">
+              <input type="checkbox" v-model="currentRecipe.useLossFactor" class="w-3.5 h-3.5 accent-amber-600 rounded" />
               <span>損耗 1.1x</span>
             </label>
-            <div class="flex items-center gap-1.5 text-slate-600 font-medium whitespace-nowrap">
+            <div class="flex items-center gap-1 text-slate-600 font-medium whitespace-nowrap">
               <span>燙種比例</span>
-              <input type="number" v-model.number="currentRecipe.yudanePct" min="0" max="50" class="w-14 text-center font-bold bg-white border border-slate-200 rounded-xl px-1.5 py-0.5 tabular-nums text-slate-900" />
+              <input type="number" v-model.number="currentRecipe.yudanePct" min="0" max="50" class="compact-field w-14 text-center font-bold bg-white border border-slate-200 rounded-lg py-0.5 tabular-nums text-slate-900" />
               <span>%</span>
             </div>
           </div>
@@ -363,81 +374,81 @@
 
         <!-- 三大核心數據指標 -->
         <div class="grid grid-cols-3 gap-2">
-          <div class="bg-gradient-to-br from-slate-50 via-white to-slate-100/90 border border-slate-200/75 py-3 px-2 rounded-3xl text-center">
-            <div class="text-[11px] font-medium text-slate-400 whitespace-nowrap">麵團總重</div>
-            <div class="text-base font-extrabold text-slate-900 mt-0.5 tabular-nums whitespace-nowrap">{{ totalDoughWeight }}g</div>
+          <div class="bg-gradient-to-br from-slate-50 via-white to-slate-100/90 border border-slate-200/75 py-2 px-2 rounded-2xl text-center">
+            <div class="text-[10px] font-medium text-slate-400 whitespace-nowrap">麵團總重</div>
+            <div class="text-sm font-extrabold text-slate-900 mt-0.5 tabular-nums whitespace-nowrap">{{ totalDoughWeight }}g</div>
           </div>
-          <div class="bg-gradient-to-br from-amber-50/90 via-orange-50/50 to-amber-100/60 border border-amber-200/70 py-3 px-2 rounded-3xl text-center">
-            <div class="text-[11px] font-medium text-amber-700/80 whitespace-nowrap">高粉總重</div>
-            <div class="text-base font-extrabold text-amber-600 mt-0.5 tabular-nums whitespace-nowrap">{{ targetFlourWeight }}g</div>
+          <div class="bg-gradient-to-br from-amber-50/90 via-orange-50/50 to-amber-100/60 border border-amber-200/70 py-2 px-2 rounded-2xl text-center">
+            <div class="text-[10px] font-medium text-amber-700/80 whitespace-nowrap">高粉總重</div>
+            <div class="text-sm font-extrabold text-amber-600 mt-0.5 tabular-nums whitespace-nowrap">{{ targetFlourWeight }}g</div>
           </div>
-          <div class="bg-gradient-to-br from-sky-50/80 via-white to-cyan-50/70 border border-sky-200/60 py-3 px-2 rounded-3xl text-center">
-            <div class="text-[11px] font-medium text-sky-700/75 whitespace-nowrap">總水合率</div>
-            <div class="text-base font-extrabold text-sky-700 mt-0.5 tabular-nums whitespace-nowrap">{{ hydrationPct }}%</div>
+          <div class="bg-gradient-to-br from-sky-50/80 via-white to-cyan-50/70 border border-sky-200/60 py-2 px-2 rounded-2xl text-center">
+            <div class="text-[10px] font-medium text-sky-700/75 whitespace-nowrap">總水合率</div>
+            <div class="text-sm font-extrabold text-sky-700 mt-0.5 tabular-nums whitespace-nowrap">{{ hydrationPct }}%</div>
           </div>
         </div>
 
         <!-- Day 1 燙種專屬顯示區塊 -->
-        <div v-if="currentRecipe.yudanePct > 0" class="bg-gradient-to-br from-amber-50 via-orange-50/70 to-amber-100/65 border border-amber-200/80 p-4 rounded-3xl space-y-3">
+        <div v-if="currentRecipe.yudanePct > 0" class="bg-gradient-to-br from-amber-50 via-orange-50/70 to-amber-100/65 border border-amber-200/80 p-3 rounded-3xl space-y-2">
           <div class="flex items-center justify-between gap-2">
             <div class="flex items-center gap-1.5">
-              <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-              <span class="text-xs font-extrabold text-amber-950 whitespace-nowrap">Day 1 前置燙種 (粉水比 1 : {{ currentRecipe.yudaneWaterRatio }})</span>
+              <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+              <span class="text-[11px] font-extrabold text-amber-950 whitespace-nowrap">Day 1 前置燙種 (粉水比 1 : {{ currentRecipe.yudaneWaterRatio }})</span>
             </div>
-            <span class="text-xs font-bold text-amber-700 bg-white/90 px-2.5 py-0.5 rounded-full border border-amber-200/70 tabular-nums whitespace-nowrap">
+            <span class="text-[10px] font-bold text-amber-700 bg-white/90 px-2 py-0.5 rounded-full border border-amber-200/70 tabular-nums whitespace-nowrap">
               共 {{ yudaneTotal }}g
             </span>
           </div>
-          <div class="grid grid-cols-2 gap-2.5">
-            <div class="bg-gradient-to-b from-white to-amber-50/40 border border-amber-200/60 rounded-2xl p-3">
-              <div class="text-[11px] font-medium text-slate-500 whitespace-nowrap">高筋麵粉 ({{ currentRecipe.yudanePct }}%)</div>
-              <div class="text-lg font-extrabold text-slate-900 mt-0.5 tabular-nums whitespace-nowrap">{{ yudaneFlour }} <span class="text-xs font-semibold text-slate-400">g</span></div>
+          <div class="grid grid-cols-2 gap-2">
+            <div class="bg-gradient-to-b from-white to-amber-50/40 border border-amber-200/60 rounded-xl px-2.5 py-2">
+              <div class="text-[10px] font-medium text-slate-500 whitespace-nowrap">高筋麵粉 ({{ currentRecipe.yudanePct }}%)</div>
+              <div class="text-sm font-extrabold text-slate-900 mt-0.5 tabular-nums whitespace-nowrap">{{ yudaneFlour }} <span class="text-[10px] font-semibold text-slate-400">g</span></div>
             </div>
-            <div class="bg-gradient-to-b from-white to-amber-50/40 border border-amber-200/60 rounded-2xl p-3">
-              <div class="text-[11px] font-medium text-slate-500 whitespace-nowrap">100°C 沸水 (×{{ currentRecipe.yudaneWaterRatio }})</div>
-              <div class="text-lg font-extrabold text-amber-600 mt-0.5 tabular-nums whitespace-nowrap">{{ yudaneWater }} <span class="text-xs font-semibold text-amber-400">g</span></div>
+            <div class="bg-gradient-to-b from-white to-amber-50/40 border border-amber-200/60 rounded-xl px-2.5 py-2">
+              <div class="text-[10px] font-medium text-slate-500 whitespace-nowrap">100°C 沸水 (×{{ currentRecipe.yudaneWaterRatio }})</div>
+              <div class="text-sm font-extrabold text-amber-600 mt-0.5 tabular-nums whitespace-nowrap">{{ yudaneWater }} <span class="text-[10px] font-semibold text-amber-400">g</span></div>
             </div>
           </div>
-          <div v-if="yudaneWaterWarning" class="text-[11px] font-bold text-rose-600 bg-rose-50 border border-rose-200/80 px-3 py-1.5 rounded-xl">
+          <div v-if="yudaneWaterWarning" class="text-[10px] font-bold text-rose-600 bg-rose-50 border border-rose-200/80 px-2.5 py-1 rounded-xl">
             ⚠️ 燙種沸水已超過配方總水量，請調降燙種比例或增加水量
           </div>
-          <div v-else class="text-[11px] text-amber-800/80 px-0.5">
+          <div v-else class="text-[10px] text-amber-800/80 px-0.5">
             拌至無乾粉 ➔ 貼皮封存冷藏 12–24 小時
           </div>
         </div>
 
-        <!-- 配方投料明細表 -->
+        <!-- 配方投料明細表 (精簡小字級版) -->
         <div class="bg-white border border-slate-200/80 rounded-3xl overflow-hidden shadow-[0_2px_10px_rgba(15,23,42,0.02)]">
-          <div class="px-4 py-3 bg-gradient-to-r from-slate-50 to-slate-100/60 border-b border-slate-100 flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <span class="text-xs font-bold text-slate-900 whitespace-nowrap">配方投料明細</span>
-              <span class="text-[10px] text-slate-400 whitespace-nowrap">點食材設含水率</span>
+          <div class="px-3.5 py-2.5 bg-gradient-to-r from-slate-50 to-slate-100/60 border-b border-slate-100 flex items-center justify-between">
+            <div class="flex items-center gap-1.5">
+              <span class="text-[11px] font-bold text-slate-900 whitespace-nowrap">配方投料明細</span>
+              <span class="text-[9px] text-slate-400 whitespace-nowrap">點食材設含水率</span>
             </div>
-            <button @click="addIngredient" class="text-xs font-bold text-amber-600 active:opacity-70 whitespace-nowrap">＋新增原料</button>
+            <button @click="addIngredient" class="text-[11px] font-bold text-amber-600 active:opacity-70 whitespace-nowrap">＋新增原料</button>
           </div>
           <div class="divide-y divide-slate-100">
-            <div class="grid grid-cols-12 px-3 py-2 text-[10px] font-bold text-slate-400 bg-slate-50/40">
+            <div class="grid grid-cols-12 px-3 py-1.5 text-[9px] font-bold text-slate-400 bg-slate-50/40">
               <div class="col-span-4 whitespace-nowrap">品項 / 屬性</div>
               <div class="col-span-2 text-center whitespace-nowrap">烘焙%</div>
               <div class="col-span-2 text-right whitespace-nowrap">總重</div>
               <div class="col-span-2 text-right text-amber-600 whitespace-nowrap">燙種</div>
               <div class="col-span-2 text-right text-slate-700 whitespace-nowrap">主麵糰</div>
             </div>
-            <div v-for="(item, idx) in computedIngredients" :key="item.id" class="grid grid-cols-12 items-center px-3 py-2.5 text-xs">
+            <div v-for="(item, idx) in computedIngredients" :key="item.id" class="grid grid-cols-12 items-center px-3 py-1.5 text-[11px]">
               <div @click="openIngredientModal(item.id)" class="col-span-4 pr-1 min-w-0 flex items-center justify-between gap-1 cursor-pointer group">
-                <span class="font-bold text-slate-800 group-hover:text-amber-700 truncate">{{ item.name }}</span>
-                <span class="px-1.5 py-0.5 rounded-md text-[9px] font-extrabold shrink-0 whitespace-nowrap tabular-nums border transition" :class="item.isFlour ? 'bg-amber-50 text-amber-800 border-amber-200/80' : (getItemMoisture(item) > 0 ? 'bg-sky-50 text-sky-700 border-sky-200/80' : 'bg-slate-100 text-slate-500 border-slate-200/60')">
+                <span class="font-semibold text-slate-800 group-hover:text-amber-700 truncate">{{ item.name }}</span>
+                <span class="px-1 py-0.2 rounded text-[8px] font-extrabold shrink-0 whitespace-nowrap tabular-nums border transition" :class="item.isFlour ? 'bg-amber-50 text-amber-800 border-amber-200/80' : (getItemMoisture(item) > 0 ? 'bg-sky-50 text-sky-700 border-sky-200/80' : 'bg-slate-100 text-slate-500 border-slate-200/60')">
                   {{ item.isFlour ? '粉' : (getItemMoisture(item) > 0 ? `濕${getItemMoisture(item)}%` : '料') }}
                 </span>
               </div>
               <div class="col-span-2 flex justify-center">
-                <input type="number" step="0.1" v-model.number="item.pct" class="w-13 max-w-[52px] text-center bg-slate-100 focus:bg-amber-50 border border-transparent focus:border-amber-300 rounded-xl py-1 px-0.5 font-bold text-slate-700 tabular-nums tracking-tight" />
+                <input type="number" step="0.1" v-model.number="item.pct" class="compact-field w-14 text-center bg-slate-100 focus:bg-amber-50 border border-transparent focus:border-amber-300 rounded-lg py-0.5 px-0.5 font-bold text-slate-700 tabular-nums tracking-tight" />
               </div>
               <div class="col-span-2 text-right font-bold text-slate-900 tabular-nums whitespace-nowrap">{{ item.totalG }}g</div>
               <div class="col-span-2 text-right font-semibold text-amber-600 tabular-nums whitespace-nowrap">{{ item.yudaneG > 0 ? item.yudaneG + 'g' : '—' }}</div>
-              <div class="col-span-2 text-right font-extrabold text-slate-900 tabular-nums whitespace-nowrap flex items-center justify-end gap-1">
+              <div class="col-span-2 text-right font-extrabold text-slate-900 tabular-nums whitespace-nowrap flex items-center justify-end gap-0.5">
                 <span>{{ item.mainG }}g</span>
-                <button v-if="currentRecipe.ingredients.length > 2" @click="removeIngredient(idx)" class="w-4 h-4 flex items-center justify-center rounded-full text-slate-300 hover:text-rose-500 hover:bg-rose-50 text-[10px] shrink-0">✕</button>
+                <button v-if="currentRecipe.ingredients.length > 2" @click="removeIngredient(idx)" class="w-3.5 h-3.5 flex items-center justify-center rounded-full text-slate-300 hover:text-rose-500 hover:bg-rose-50 text-[9px] shrink-0">✕</button>
               </div>
             </div>
           </div>
@@ -742,7 +753,6 @@
 
         const state = reactive(JSON.parse(JSON.stringify(defaultState)));
 
-        // Supabase 雲端同步與自動保活
         const showCloudModal = ref(false);
         const cloudStatus = ref('offline');
         const cloudForm = reactive({ ...DEFAULT_CLOUD });
@@ -794,7 +804,7 @@
             if (!silent) notify('雲端同步與喚醒成功');
           } catch (e) {
             cloudStatus.value = 'offline';
-            if (!silent) notify('雲端連線失敗，請檢查資料表是否已建立');
+            if (!silent) notify('雲端連線失敗，請檢查金鑰與權限');
           }
         };
 
@@ -822,7 +832,7 @@
             localStorage.setItem(CLOUD_CFG_KEY, JSON.stringify({ ...cloudForm, ...cloudMeta }));
           } catch (e) {
             cloudStatus.value = 'offline';
-            if (!silent) notify('雲端連線失敗，請確認建表 SQL 已執行');
+            if (!silent) notify('雲端連線失敗，請檢查金鑰與權限');
           }
         };
 
@@ -843,7 +853,7 @@
             if (manual) notify('資料庫喚醒正常 (已重設7天計時)');
           } catch (e) {
             cloudStatus.value = 'offline';
-            if (manual) notify('喚醒失敗，請檢查資料表 bakery_sync');
+            if (manual) notify('喚醒失敗，請檢查金鑰與資料表權限');
           }
         };
 
