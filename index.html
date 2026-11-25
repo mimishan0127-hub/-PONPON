@@ -203,7 +203,7 @@
         </div>
 
         <p class="text-[11px] text-slate-500 leading-relaxed">
-          已預設填入你的專屬 Supabase 雲端資料庫，開啟網頁時會自動喚醒並同步配方與日誌。
+          填入你的 Supabase 網址與金鑰（建議使用 Legacy anon eyJ... 金鑰），開啟網頁時會自動喚醒並同步配方與日誌。
         </p>
 
         <div class="space-y-2.5">
@@ -213,7 +213,7 @@
           </div>
           <div>
             <label class="text-[11px] font-semibold text-slate-500 block mb-1">API Key</label>
-            <input v-model.trim="cloudForm.key" placeholder="sb_publishable_... 或 eyJ..." class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-3.5 py-2 text-xs font-medium text-slate-900 focus:outline-none focus:border-amber-500" />
+            <input v-model.trim="cloudForm.key" placeholder="eyJhbGci... 或 sb_publishable_..." class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-3.5 py-2 text-xs font-medium text-slate-900 focus:outline-none focus:border-amber-500" />
           </div>
           <div>
             <label class="text-[11px] font-semibold text-slate-500 block mb-1">同步帳號代碼 (多裝置填相同代碼即可互通)</label>
@@ -302,7 +302,7 @@
     <!-- 主內容區 -->
     <main class="flex-1 overflow-y-auto px-3.5 pt-3 pb-6 space-y-3 bg-white">
 
-      <!-- ==================== 1. 配方 (字級精緻縮小版) ==================== -->
+      <!-- ==================== 1. 配方 ==================== -->
       <section v-show="activeTab === 'calc'" class="space-y-3">
         
         <div class="bg-gradient-to-b from-slate-50 to-slate-100/70 border border-slate-200/75 p-3 rounded-3xl space-y-2.5">
@@ -330,11 +330,13 @@
             <button type="button" @click="isEditingRecipeName = false" class="px-2 py-1.5 bg-white border border-slate-200 text-slate-500 text-[11px] font-semibold rounded-xl shrink-0 whitespace-nowrap">取消</button>
           </form>
 
+          <!-- 換算基準切換：依模具 vs 依總麵糰重 -->
           <div class="grid grid-cols-2 gap-1 bg-slate-200/70 p-0.5 rounded-xl">
             <button @click="state.calcMode = 'mold'" :class="state.calcMode === 'mold' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500'" class="py-1 text-[11px] font-semibold rounded-lg transition whitespace-nowrap">依模具</button>
-            <button @click="state.calcMode = 'flour'" :class="state.calcMode === 'flour' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500'" class="py-1 text-[11px] font-semibold rounded-lg transition whitespace-nowrap">依總粉重</button>
+            <button @click="state.calcMode = 'dough'" :class="state.calcMode === 'dough' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500'" class="py-1 text-[11px] font-semibold rounded-lg transition whitespace-nowrap">依總麵糰重</button>
           </div>
 
+          <!-- 模式 A：依模具組合換算 -->
           <div v-if="state.calcMode === 'mold'" class="space-y-1.5">
             <div class="grid grid-cols-2 gap-1.5">
               <div v-for="m in state.molds" :key="m.id" class="bg-white border border-slate-200/70 rounded-xl px-2.5 py-1.5 flex items-center justify-between gap-1">
@@ -354,9 +356,13 @@
             </div>
           </div>
 
+          <!-- 模式 B：依總麵糰重回推 -->
           <div v-else class="flex items-center justify-between bg-white border border-slate-200/70 px-3 py-1.5 rounded-xl">
-            <span class="text-[11px] font-semibold text-slate-600 whitespace-nowrap">總粉重 (g)</span>
-            <input type="number" v-model.number="state.customFlour" min="50" step="10" class="compact-field w-24 text-right font-bold bg-slate-50 border border-slate-200 rounded-lg px-2 py-0.5 tabular-nums text-slate-900" />
+            <div>
+              <div class="text-[11px] font-bold text-slate-700 whitespace-nowrap">目標總麵糰重 (g)</div>
+              <div class="text-[9px] text-slate-400 whitespace-nowrap">自動依 {{ totalBakerPct }}% 回推高粉與配料</div>
+            </div>
+            <input type="number" v-model.number="state.customDough" min="50" step="10" class="compact-field w-24 text-right font-extrabold bg-slate-50 border border-slate-200 rounded-lg px-2 py-0.5 tabular-nums text-slate-900" />
           </div>
 
           <div class="flex items-center justify-between gap-2 text-[11px]">
@@ -383,7 +389,7 @@
             <div class="text-sm font-extrabold text-amber-600 mt-0.5 tabular-nums whitespace-nowrap">{{ targetFlourWeight }}g</div>
           </div>
           <div class="bg-gradient-to-br from-sky-50/80 via-white to-cyan-50/70 border border-sky-200/60 py-2 px-2 rounded-2xl text-center">
-            <div class="text-[10px] font-medium text-sky-700/75 whitespace-nowrap">總水合率</div>
+            <div class="text-[10px] font-medium text-sky-700/75 whitespace-nowrap">有效含水率</div>
             <div class="text-sm font-extrabold text-sky-700 mt-0.5 tabular-nums whitespace-nowrap">{{ hydrationPct }}%</div>
           </div>
         </div>
@@ -417,12 +423,12 @@
           </div>
         </div>
 
-        <!-- 配方投料明細表 (精簡小字級版) -->
+        <!-- 配方投料明細表 (直接雙向綁定原始配方陣列，即時連動重算) -->
         <div class="bg-white border border-slate-200/80 rounded-3xl overflow-hidden shadow-[0_2px_10px_rgba(15,23,42,0.02)]">
           <div class="px-3.5 py-2.5 bg-gradient-to-r from-slate-50 to-slate-100/60 border-b border-slate-100 flex items-center justify-between">
             <div class="flex items-center gap-1.5">
               <span class="text-[11px] font-bold text-slate-900 whitespace-nowrap">配方投料明細</span>
-              <span class="text-[9px] text-slate-400 whitespace-nowrap">點食材設含水率</span>
+              <span class="text-[9px] font-semibold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded tabular-nums whitespace-nowrap">合計 {{ totalBakerPct }}%</span>
             </div>
             <button @click="addIngredient" class="text-[11px] font-bold text-amber-600 active:opacity-70 whitespace-nowrap">＋新增原料</button>
           </div>
@@ -442,7 +448,14 @@
                 </span>
               </div>
               <div class="col-span-2 flex justify-center">
-                <input type="number" step="0.1" v-model.number="item.pct" class="compact-field w-14 text-center bg-slate-100 focus:bg-amber-50 border border-transparent focus:border-amber-300 rounded-lg py-0.5 px-0.5 font-bold text-slate-700 tabular-nums tracking-tight" />
+                <input
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  :value="currentRecipe.ingredients[idx].pct"
+                  @input="updateIngredientPct(idx, $event.target.value)"
+                  class="compact-field w-14 text-center bg-slate-100 focus:bg-amber-50 border border-transparent focus:border-amber-300 rounded-lg py-0.5 px-0.5 font-bold text-slate-700 tabular-nums tracking-tight"
+                />
               </div>
               <div class="col-span-2 text-right font-bold text-slate-900 tabular-nums whitespace-nowrap">{{ item.totalG }}g</div>
               <div class="col-span-2 text-right font-semibold text-amber-600 tabular-nums whitespace-nowrap">{{ item.yudaneG > 0 ? item.yudaneG + 'g' : '—' }}</div>
@@ -635,7 +648,8 @@
 
     createApp({
       setup() {
-        const STORAGE_KEY = 'artisan_bread_lab_v1';
+        const STORAGE_KEY = 'artisan_bread_lab_v2';
+        const LEGACY_STORAGE_KEY = 'artisan_bread_lab_v1';
         const CLOUD_CFG_KEY = 'pon_bakery_cloud_cfg_v1';
         const DEFAULT_CLOUD = {
           url: 'https://rmwkzmohwydjqrwrvmid.supabase.co',
@@ -674,24 +688,27 @@
           '細砂糖': { grams: 500, price: 24 },
           '鹽': { grams: 500, price: 15 },
           '乾酵母': { grams: 125, price: 55 },
-          '無鹽奶油': { grams: 454, price: 195 }
+          '無鹽奶油': { grams: 454, price: 195 },
+          '全蛋': { grams: 600, price: 65 },
+          '大豆卵磷脂': { grams: 200, price: 180 },
+          '龍眼蜜': { grams: 700, price: 280 }
         };
 
         const defaultState = {
           selectedRecipeId: 'maitian-74-15',
           calcMode: 'mold',
-          customFlour: 500,
+          customDough: 1000,
           targetBakeEnd: '15:00',
           molds: [
             { id: 'm12', name: '12兩(黑) 2285ml', shortName: '12兩(黑)', baseDough: 500, bakeTime: '30-33', qty: 1 },
-            { id: 'm10', name: '10*(銀) 1000ml', shortName: '10*(銀)', baseDough: 250, bakeTime: '25-28', qty: 1 },
+            { id: 'm6',  name: '6*(銀) 216ml',   shortName: '6*(銀)', baseDough: 55,  bakeTime: '16-18', qty: 1 },
             { id: 'm75', name: '7.5*(銀) 422ml', shortName: '7.5*(銀)', baseDough: 105, bakeTime: '21-25', qty: 1 },
-            { id: 'm6',  name: '6*(銀) 216ml',   shortName: '6*(銀)', baseDough: 55,  bakeTime: '16-18', qty: 1 }
+            { id: 'm10', name: '10*(銀) 1000ml', shortName: '10*(銀)', baseDough: 250, bakeTime: '25-28', qty: 1 }
           ],
           recipes: [
             {
               id: 'maitian-74-15',
-              name: '麥典74%+15%柔軟吐司 (直接法)',
+              name: '麥典日式柔軟吐司 15%(1:1.2粉水比)',
               useLossFactor: true,
               lossFactor: 1.1,
               yudanePct: 15,
@@ -704,7 +721,10 @@
                 { id: 'i5', name: '細砂糖', pct: 10, isFlour: false, isLiquid: false, moisturePct: 0 },
                 { id: 'i6', name: '鹽', pct: 1.8, isFlour: false, isLiquid: false, moisturePct: 0 },
                 { id: 'i7', name: '乾酵母', pct: 1.2, isFlour: false, isLiquid: false, moisturePct: 0 },
-                { id: 'i8', name: '無鹽奶油', pct: 10, isFlour: false, isLiquid: false, moisturePct: 0 }
+                { id: 'i8', name: '無鹽奶油', pct: 10, isFlour: false, isLiquid: true, moisturePct: 15 },
+                { id: 'i9', name: '全蛋', pct: 0, isFlour: false, isLiquid: true, moisturePct: 74 },
+                { id: 'i10', name: '大豆卵磷脂', pct: 0, isFlour: false, isLiquid: false, moisturePct: 0 },
+                { id: 'i11', name: '龍眼蜜', pct: 0, isFlour: false, isLiquid: true, moisturePct: 17 }
               ]
             }
           ],
@@ -742,7 +762,7 @@
             {
               id: 'log-init',
               date: '基準紀錄',
-              recipeName: '麥典74%+15%柔軟吐司',
+              recipeName: '麥典日式柔軟吐司 15%(1:1.2粉水比)',
               doughTemp: '25.2°C',
               env: '28°C/75%',
               oven: '晶工',
@@ -884,10 +904,14 @@
         onMounted(() => {
           let hasLocalSave = false;
           try {
-            const saved = localStorage.getItem(STORAGE_KEY);
+            const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY);
             if (saved) {
               hasLocalSave = true;
               const parsed = JSON.parse(saved);
+              if (parsed.calcMode === 'flour') {
+                parsed.calcMode = 'dough';
+                parsed.customDough = parsed.customDough || 1000;
+              }
               if (parsed.molds) {
                 parsed.molds = parsed.molds.map((m, i) => ({
                   ...m,
@@ -898,16 +922,15 @@
                 parsed.recipes.forEach(r => {
                   (r.ingredients || []).forEach(ing => {
                     if (typeof ing.moisturePct !== 'number') ing.moisturePct = getItemMoisture(ing);
+                    if (ing.name === '無鹽奶油' && ing.moisturePct === 0) {
+                      ing.isLiquid = true;
+                      ing.moisturePct = 15;
+                    }
                   });
                 });
               }
               if (!parsed.purchases) {
                 parsed.purchases = JSON.parse(JSON.stringify(defaultPurchases));
-                if (parsed.unitPrices) {
-                  for (const [k, v] of Object.entries(parsed.unitPrices)) {
-                    if (typeof v === 'number') parsed.purchases[k] = { grams: 1000, price: v };
-                  }
-                }
               }
               Object.assign(state, parsed);
             }
@@ -953,8 +976,9 @@
           { label: '純水', pct: 100 },
           { label: '蛋白', pct: 88 },
           { label: '牛奶', pct: 87 },
-          { label: '全蛋', pct: 75 },
+          { label: '全蛋', pct: 74 },
           { label: '鮮奶油', pct: 60 },
+          { label: '蛋黃', pct: 54 },
           { label: '煉乳', pct: 27 },
           { label: '龍眼蜜', pct: 17 },
           { label: '無鹽奶油', pct: 15 }
@@ -1014,6 +1038,11 @@
         const renameInputRef = ref(null);
         const confirmDeleteRecipe = ref(false);
 
+        const updateIngredientPct = (idx, rawVal) => {
+          const parsed = parseFloat(rawVal);
+          currentRecipe.value.ingredients[idx].pct = Number.isNaN(parsed) ? 0 : Math.max(0, parsed);
+        };
+
         const createNewRecipe = () => {
           const newId = 'r-' + Date.now();
           state.recipes.push({
@@ -1029,7 +1058,7 @@
               { id: 'i3-' + Date.now(), name: '細砂糖', pct: 8, isFlour: false, isLiquid: false, moisturePct: 0 },
               { id: 'i4-' + Date.now(), name: '鹽', pct: 1.8, isFlour: false, isLiquid: false, moisturePct: 0 },
               { id: 'i5-' + Date.now(), name: '乾酵母', pct: 1.2, isFlour: false, isLiquid: false, moisturePct: 0 },
-              { id: 'i6-' + Date.now(), name: '無鹽奶油', pct: 8, isFlour: false, isLiquid: false, moisturePct: 0 }
+              { id: 'i6-' + Date.now(), name: '無鹽奶油', pct: 8, isFlour: false, isLiquid: true, moisturePct: 15 }
             ]
           });
           state.selectedRecipeId = newId;
@@ -1077,17 +1106,24 @@
           }
         };
 
-        // 配方核心計算
+        // 配方核心計算 (支援依模具 或 依總麵糰重回推)
         const totalBakerPct = computed(() => Number(currentRecipe.value.ingredients.reduce((sum, i) => sum + (Number(i.pct) || 0), 0).toFixed(1)));
         const totalActiveMolds = computed(() => state.molds.reduce((sum, m) => sum + (Number(m.qty) || 0), 0));
 
         const targetFlourWeight = computed(() => {
           const r = currentRecipe.value;
-          if (state.calcMode === 'flour') return Math.max(1, Number(state.customFlour) || 500);
+          const totalPct = totalBakerPct.value || 100;
+          const lossMult = r.useLossFactor ? (r.lossFactor || 1.1) : 1;
+
+          if (state.calcMode === 'dough') {
+            const targetDough = Math.max(0, Number(state.customDough) || 0);
+            if (targetDough <= 0) return 0;
+            return Math.round(((targetDough * lossMult) / totalPct) * 100);
+          }
+
           const rawDough = state.molds.reduce((sum, m) => sum + (m.baseDough * (Number(m.qty) || 0)), 0);
           if (rawDough <= 0) return 0;
-          const withLoss = r.useLossFactor ? rawDough * (r.lossFactor || 1.1) : rawDough;
-          return Math.round((withLoss / (totalBakerPct.value || 100)) * 100);
+          return Math.round(((rawDough * lossMult) / totalPct) * 100);
         });
 
         const yudaneFlour = computed(() => Math.round(targetFlourWeight.value * ((currentRecipe.value.yudanePct || 0) / 100)));
@@ -1227,7 +1263,7 @@
         };
 
         const autoMoldCount = computed(() => {
-          if (state.calcMode === 'flour') return Math.max(1, Math.round(totalDoughWeight.value / 500));
+          if (state.calcMode === 'dough') return Math.max(1, Math.round(totalDoughWeight.value / 500));
           return Math.max(1, totalActiveMolds.value);
         });
 
@@ -1309,7 +1345,7 @@
           openIngredientModal, setModalType, closeIngredientModal, saveIngredientModal,
           isEditingRecipeName, editingRecipeName, renameInputRef, confirmDeleteRecipe,
           createNewRecipe, startRenameRecipe, saveRenameRecipe, duplicateRecipe, handleDeleteRecipe,
-          totalBakerPct, totalActiveMolds, targetFlourWeight, yudaneFlour, yudaneWater, yudaneTotal, yudaneWaterWarning,
+          updateIngredientPct, totalBakerPct, totalActiveMolds, targetFlourWeight, yudaneFlour, yudaneWater, yudaneTotal, yudaneWaterWarning,
           computedIngredients, totalDoughWeight, hydrationPct,
           timers, activeRunningTimer, toggleTimer, assignTimer, setCustomTimerMins, resetTimer, formatSeconds, suggestedStartTime,
           ensurePurchaseItem, calcItemBatchCost, autoMoldCount, batchIngredientCost, unitTotalCost, suggestedPrice, unitProfit,
