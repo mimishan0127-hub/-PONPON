@@ -8,8 +8,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Wake up Supabase
+        env:
+          SB_URL: ${{ secrets.SUPABASE_URL }}
+          SB_KEY: ${{ secrets.SUPABASE_KEY }}
         run: |
-          curl -s -o /dev/null -w "%{http_code}" \
-            -H "apikey: ${{ secrets.SUPABASE_KEY }}" \
-            -H "Authorization: Bearer ${{ secrets.SUPABASE_KEY }}" \
-            "${{ secrets.SUPABASE_URL }}/rest/v1/bakery_sync?select=id&limit=1"
+          if [ -z "$SB_URL" ] || [ -z "$SB_KEY" ]; then
+            echo "❌ 找不到 SUPABASE_URL 或 SUPABASE_KEY，請確認已設定在 Repository secrets"
+            exit 1
+          fi
+          CLEAN_URL=$(echo "$SB_URL" | tr -d '[:space:]' | sed 's|/rest/v1/*$||; s|/*$||')
+          CLEAN_KEY=$(echo "$SB_KEY" | tr -d '[:space:]')
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "apikey: $CLEAN_KEY" \
+            "$CLEAN_URL/rest/v1/bakery_sync?select=id&limit=1")
+          echo "Supabase 回應狀態碼: $STATUS"
+          if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 300 ]; then
+            echo "✅ 資料庫喚醒成功！"
+          else
+            echo "❌ 喚醒失敗，請檢查資料表 bakery_sync 是否已建立"
+            exit 1
+          fi
