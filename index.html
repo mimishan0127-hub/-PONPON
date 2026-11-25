@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="小山PON" />
+  <meta name="theme-color" content="#FFFFFF" />
+  <title>小山PON</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    [v-cloak] { display: none !important; }
+    html, body {
+      height: 100dvh;
+      margin: 0;
+      padding: 0;
+      background-color: #FFFFFF;
+      color: #0F172A;
+      overscroll-behavior-y: none;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang TC", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    input, textarea, select {
+      user-select: auto;
+      font-size: 16px !important;
+    }
+    .tabular-nums { font-variant-numeric: tabular-nums; }
+    .safe-top { padding-top: max(0.75rem, env(safe-area-inset-top)); }
+    .safe-bottom { padding-bottom: max(0.5rem, env(safe-area-inset-bottom)); }
+    ::-webkit-scrollbar { width: 0px; height: 0px; }
+  </style>
+  <script>
+    (function() {
+      const appName = "小山PON";
+      const canvas = document.createElement('canvas');
+      canvas.width = 512; canvas.height = 512;
+      const ctx = canvas.getContext('2d');
+
+      const bgGrad = ctx.createLinearGradient(0, 0, 512, 512);
+      bgGrad.addColorStop(0, '#FFF8EE');
+      bgGrad.addColorStop(0.55, '#FDE6C4');
+      bgGrad.addColorStop(1, '#F5C78E');
+      ctx.fillStyle = bgGrad;
+      ctx.fillRect(0, 0, 512, 512);
+
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.78)';
+      ctx.beginPath();
+      ctx.arc(256, 256, 178, 0, Math.PI * 2);
+      ctx.fill();
+
+      const crustGrad = ctx.createLinearGradient(156, 150, 356, 360);
+      crustGrad.addColorStop(0, '#D97706');
+      crustGrad.addColorStop(1, '#92400E');
+      ctx.fillStyle = crustGrad;
+      ctx.beginPath();
+      ctx.moveTo(175, 232);
+      ctx.bezierCurveTo(142, 224, 146, 162, 206, 156);
+      ctx.lineTo(306, 156);
+      ctx.bezierCurveTo(366, 162, 370, 224, 337, 232);
+      ctx.lineTo(337, 336);
+      ctx.quadraticCurveTo(337, 358, 315, 358);
+      ctx.lineTo(197, 358);
+      ctx.quadraticCurveTo(175, 358, 175, 336);
+      ctx.closePath();
+      ctx.fill();
+
+      const crumbGrad = ctx.createLinearGradient(190, 172, 320, 342);
+      crumbGrad.addColorStop(0, '#FFFDF9');
+      crumbGrad.addColorStop(1, '#FEF3C7');
+      ctx.fillStyle = crumbGrad;
+      ctx.beginPath();
+      ctx.moveTo(191, 224);
+      ctx.bezierCurveTo(166, 218, 170, 174, 212, 170);
+      ctx.lineTo(300, 170);
+      ctx.bezierCurveTo(342, 174, 346, 218, 321, 224);
+      ctx.lineTo(321, 330);
+      ctx.quadraticCurveTo(321, 342, 309, 342);
+      ctx.lineTo(203, 342);
+      ctx.quadraticCurveTo(191, 342, 191, 330);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.strokeStyle = '#D97706';
+      ctx.lineWidth = 10;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(220, 228); ctx.lineTo(292, 228);
+      ctx.moveTo(220, 260); ctx.lineTo(274, 260);
+      ctx.stroke();
+
+      ctx.fillStyle = '#0F172A';
+      ctx.beginPath();
+      ctx.arc(316, 326, 36, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#FFFFFF';
+      ctx.lineWidth = 6;
+      ctx.stroke();
+
+      ctx.strokeStyle = '#FBBF24';
+      ctx.lineWidth = 8;
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      ctx.moveTo(301, 326); ctx.lineTo(312, 337); ctx.lineTo(333, 315);
+      ctx.stroke();
+
+      const iconUrl = canvas.toDataURL('image/png');
+      const link = document.createElement('link');
+      link.rel = 'apple-touch-icon'; link.href = iconUrl;
+      document.head.appendChild(link);
+
+      const iconFav = document.createElement('link');
+      iconFav.rel = 'icon'; iconFav.type = 'image/png'; iconFav.href = iconUrl;
+      document.head.appendChild(iconFav);
+
+      const manifest = {
+        name: appName, short_name: appName, start_url: '.', display: 'standalone',
+        background_color: '#FFFFFF', theme_color: '#FFFFFF',
+        icons: [
+          { src: iconUrl, sizes: '512x512', type: 'image/png', purpose: 'any' },
+          { src: iconUrl, sizes: '512x512', type: 'image/png', purpose: 'maskable' }
+        ]
+      };
+      const mLink = document.createElement('link');
+      mLink.rel = 'manifest';
+      mLink.href = 'data:application/manifest+json;charset=utf-8,' + encodeURIComponent(JSON.stringify(manifest));
+      document.head.appendChild(mLink);
+    })();
+  </script>
+</head>
+<body class="overflow-hidden bg-white">
+  <div id="app" v-cloak class="h-[100dvh] flex flex-col max-w-lg mx-auto w-full bg-white relative">
+
+    <!-- 頂部極簡列 -->
+    <header class="bg-white/95 backdrop-blur-md border-b border-slate-100 px-3.5 pb-2.5 safe-top flex items-center justify-between gap-1.5 shrink-0 z-20">
+      <div class="flex items-center gap-2 min-w-0">
+        <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-100 via-orange-100 to-amber-200 border border-amber-200/80 flex items-center justify-center shrink-0">
+          <svg class="w-5 h-5" viewBox="0 0 32 32" fill="none">
+            <path d="M7 14.5C4.5 13.8 4.8 9 9.5 8.5H22.5C27.2 9 27.5 13.8 25 14.5V23.5C25 25.2 23.6 26.5 22 26.5H10C8.4 26.5 7 25.2 7 23.5V14.5Z" fill="url(#breadGrad)"/>
+            <path d="M9.5 14C7.8 13.5 8 10.8 11 10.5H21C24 10.8 24.2 13.5 22.5 14V22.8C22.5 23.7 21.8 24.5 20.8 24.5H11.2C10.2 24.5 9.5 23.7 9.5 22.8V14Z" fill="#FFFDF9"/>
+            <path d="M12.5 15.5H19.5M12.5 19H17.5" stroke="#D97706" stroke-width="1.8" stroke-linecap="round"/>
+            <circle cx="23.5" cy="23.5" r="4.5" fill="#0F172A" stroke="#FFFFFF" stroke-width="1.2"/>
+            <path d="M21.8 23.5L23 24.7L25.3 22.4" stroke="#FBBF24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <defs>
+              <linearGradient id="breadGrad" x1="6" y1="8" x2="26" y2="27" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#D97706"/>
+                <stop offset="1" stop-color="#92400E"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <h1 class="text-[15px] font-extrabold tracking-tight text-slate-900 whitespace-nowrap">小山PON</h1>
+      </div>
+
+      <!-- 跨分頁懸浮計時膠囊 -->
+      <button v-if="activeTab !== 'timer' && activeRunningTimer" @click="activeTab = 'timer'" class="px-2 py-1 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-bold flex items-center gap-1 shadow-xs animate-pulse tabular-nums whitespace-nowrap">
+        <span>⏱{{ activeRunningTimer.id }}</span>
+        <span>{{ formatSeconds(activeRunningTimer.seconds) }}</span>
+      </button>
+
+      <div class="flex items-center gap-1 shrink-0">
+        <button @click="showCloudModal = true" class="px-2.5 py-1.5 text-[11px] font-bold rounded-full active:scale-95 transition whitespace-nowrap flex items-center gap-1 border" :class="cloudStatus === 'connected' ? 'bg-emerald-50 text-emerald-700 border-emerald-200/80' : (cloudStatus === 'syncing' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-slate-100 text-slate-600 border-transparent')">
+          <span class="w-1.5 h-1.5 rounded-full" :class="cloudStatus === 'connected' ? 'bg-emerald-500' : (cloudStatus === 'syncing' ? 'bg-amber-500 animate-ping' : 'bg-slate-400')"></span>
+          <span>雲端</span>
+        </button>
+        <button @click="exportBackup" class="px-2.5 py-1.5 text-[11px] font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200/70 rounded-full active:scale-95 transition whitespace-nowrap">備份</button>
+        <label class="px-2.5 py-1.5 text-[11px] font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200/70 rounded-full active:scale-95 transition cursor-pointer whitespace-nowrap">
+          還原
+          <input type="file" accept=".json" @change="importBackup" class="hidden" />
+        </label>
+      </div>
+    </header>
+
+    <!-- Toast 懸浮通知 -->
+    <transition name="fade">
+      <div v-if="toast.show" class="fixed top-14 left-1/2 -translate-x-1/2 z-50 bg-slate-900/95 text-white text-xs font-medium px-4 py-2 rounded-full shadow-lg whitespace-nowrap">
+        {{ toast.msg }}
+      </div>
+    </transition>
+
+    <!-- 雲端資料庫同步設定視窗 (Supabase) -->
+    <div v-if="showCloudModal" @click.self="showCloudModal = false" class="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-xs flex items-end sm:items-center justify-center p-3">
+      <form @submit.prevent="saveCloudConfig" class="bg-white w-full max-w-md rounded-3xl p-5 shadow-2xl border border-slate-100 space-y-3.5">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full" :class="cloudStatus === 'connected' ? 'bg-emerald-500' : 'bg-amber-500'"></span>
+            <h3 class="text-sm font-extrabold text-slate-900">Supabase 雲端同步與自動喚醒</h3>
+          </div>
+          <button type="button" @click="showCloudModal = false" class="w-7 h-7 rounded-full bg-slate-100 text-slate-500 text-xs font-bold">✕</button>
+        </div>
+
+        <p class="text-[11px] text-slate-500 leading-relaxed">
+          填入免費 Supabase 專案資訊，即可跨手機/電腦即時同步配方與日誌，並於開啟時自動執行保活喚醒。
+        </p>
+
+        <div class="space-y-2.5">
+          <div>
+            <label class="text-[11px] font-semibold text-slate-500 block mb-1">Project URL</label>
+            <input v-model.trim="cloudForm.url" placeholder="https://xxxx.supabase.co" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-3.5 py-2 text-xs font-medium text-slate-900 focus:outline-none focus:border-amber-500" />
+          </div>
+          <div>
+            <label class="text-[11px] font-semibold text-slate-500 block mb-1">Anon Public Key</label>
+            <input v-model.trim="cloudForm.key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6..." class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-3.5 py-2 text-xs font-medium text-slate-900 focus:outline-none focus:border-amber-500" />
+          </div>
+          <div>
+            <label class="text-[11px] font-semibold text-slate-500 block mb-1">同步帳號代碼 (多裝置填相同代碼即可互通)</label>
+            <input v-model.trim="cloudForm.syncId" placeholder="pon_bakery_01" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-3.5 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-amber-500" />
+          </div>
+        </div>
+
+        <div v-if="cloudMeta.lastPing" class="bg-emerald-50/80 border border-emerald-200/70 px-3 py-2 rounded-2xl text-[11px] text-emerald-800 flex items-center justify-between">
+          <span>上次雲端喚醒同步：{{ cloudMeta.lastPing }}</span>
+          <button type="button" @click="pingAndSyncCloud(true)" class="font-extrabold underline">立即測試</button>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2 pt-1">
+          <button type="button" @click="disconnectCloud" class="py-2.5 rounded-2xl bg-slate-100 text-slate-600 font-bold text-xs active:scale-95">停用雲端</button>
+          <button type="button" @click="pullFromCloud" class="py-2.5 rounded-2xl bg-sky-50 border border-sky-200 text-sky-700 font-bold text-xs active:scale-95">從雲端拉取</button>
+          <button type="submit" class="py-2.5 rounded-2xl bg-gradient-to-r from-slate-800 to-slate-950 text-white font-bold text-xs active:scale-95">儲存並同步</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- 食材屬性與含水率設定小視窗 (Modal) -->
+    <div v-if="editingIngredient" @click.self="closeIngredientModal" class="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-xs flex items-end sm:items-center justify-center p-3">
+      <form @submit.prevent="saveIngredientModal" class="bg-white w-full max-w-md rounded-3xl p-5 shadow-2xl border border-slate-100 space-y-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+            <h3 class="text-sm font-extrabold text-slate-900">食材屬性與含水率設定</h3>
+          </div>
+          <button type="button" @click="closeIngredientModal" class="w-7 h-7 rounded-full bg-slate-100 text-slate-500 text-xs font-bold">✕</button>
+        </div>
+
+        <div>
+          <label class="text-[11px] font-semibold text-slate-400 block mb-1">食材名稱</label>
+          <input v-model="ingModalForm.name" placeholder="例如：全脂牛奶、龍眼蜜" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-3.5 py-2 font-bold text-slate-900 focus:outline-none focus:border-amber-500" />
+        </div>
+
+        <div>
+          <label class="text-[11px] font-semibold text-slate-400 block mb-1.5">材料分類</label>
+          <div class="grid grid-cols-3 gap-1.5 bg-slate-100 p-1 rounded-2xl">
+            <button type="button" @click="setModalType('flour')" :class="ingModalForm.type === 'flour' ? 'bg-white text-amber-700 shadow-xs' : 'text-slate-500'" class="py-2 text-xs font-bold rounded-xl transition whitespace-nowrap">
+              🌾 粉類 (100%)
+            </button>
+            <button type="button" @click="setModalType('wet')" :class="ingModalForm.type === 'wet' ? 'bg-white text-sky-700 shadow-xs' : 'text-slate-500'" class="py-2 text-xs font-bold rounded-xl transition whitespace-nowrap">
+              💧 液體 / 濕性
+            </button>
+            <button type="button" @click="setModalType('dry')" :class="ingModalForm.type === 'dry' ? 'bg-white text-slate-800 shadow-xs' : 'text-slate-500'" class="py-2 text-xs font-bold rounded-xl transition whitespace-nowrap">
+              🧂 乾料 / 無水
+            </button>
+          </div>
+        </div>
+
+        <div v-if="ingModalForm.type === 'wet'" class="bg-gradient-to-br from-sky-50/90 via-white to-cyan-50/70 border border-sky-200/80 p-3.5 rounded-2xl space-y-3">
+          <div class="flex items-center justify-between gap-2">
+            <div>
+              <div class="text-xs font-extrabold text-sky-950">該食材含水率 (%)</div>
+              <div class="text-[10px] text-sky-700/80 mt-0.5">將依此比例計入麵團總水合率</div>
+            </div>
+            <div class="flex items-center gap-1 bg-white border border-sky-200 rounded-xl px-2.5 py-1">
+              <input type="number" min="0" max="100" step="0.5" v-model.number="ingModalForm.moisturePct" class="w-16 text-right font-extrabold text-sky-700 tabular-nums focus:outline-none" />
+              <span class="text-xs font-bold text-sky-500">%</span>
+            </div>
+          </div>
+
+          <div>
+            <div class="text-[10px] font-semibold text-slate-400 mb-1.5">常見濕性食材含水率參考（點擊套用）：</div>
+            <div class="flex flex-wrap gap-1.5">
+              <button v-for="preset in moisturePresets" :key="preset.label" type="button" @click="ingModalForm.moisturePct = preset.pct" class="px-2.5 py-1 rounded-xl text-[11px] font-bold border transition tabular-nums whitespace-nowrap" :class="Number(ingModalForm.moisturePct) === preset.pct ? 'bg-sky-600 text-white border-sky-600' : 'bg-white text-slate-600 border-slate-200 hover:border-sky-300'">
+                {{ preset.label }} {{ preset.pct }}%
+              </button>
+            </div>
+          </div>
+
+          <label class="flex items-center gap-2 pt-1 border-t border-sky-100 text-[11px] font-semibold text-slate-600 cursor-pointer">
+            <input type="checkbox" v-model="ingModalForm.isWater" class="w-4 h-4 accent-sky-600 rounded" />
+            <span>作為 Day 1 燙種沖燙沸水來源</span>
+          </label>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 pt-1">
+          <button type="button" @click="closeIngredientModal" class="py-2.5 rounded-2xl bg-slate-100 text-slate-600 font-bold text-xs active:scale-95 transition">取消</button>
+          <button type="submit" class="py-2.5 rounded-2xl bg-gradient-to-r from-slate-800 to-slate-950 text-white font-bold text-xs active:scale-95 transition">確認套用</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- 主內容區 -->
+    <main class="flex-1 overflow-y-auto px-3.5 pt-3.5 pb-6 space-y-3.5 bg-white">
+
+      <!-- ==================== 1. 配方 ==================== -->
+      <section v-show="activeTab === 'calc'" class="space-y-3.5">
+        
+        <!-- 配方管理與模具控制卡 -->
+        <div class="bg-gradient-to-b from-slate-50 to-slate-100/70 border border-slate-200/75 p-3.5 rounded-3xl space-y-3">
+          
+          <div v-if="!isEditingRecipeName" class="space-y-2">
+            <select v-model="state.selectedRecipeId" @change="confirmDeleteRecipe = false" class="w-full bg-white border border-slate-200 rounded-2xl px-3.5 py-2.5 font-bold text-slate-900 focus:outline-none focus:border-amber-500">
+              <option v-for="r in state.recipes" :key="r.id" :value="r.id">{{ r.name }}</option>
+            </select>
+            <div class="grid grid-cols-4 gap-1.5">
+              <button @click="createNewRecipe" class="py-1.5 bg-white border border-slate-200 text-slate-700 font-semibold text-xs rounded-xl active:scale-95 whitespace-nowrap">＋新增</button>
+              <button @click="startRenameRecipe" class="py-1.5 bg-white border border-slate-200 text-slate-700 font-semibold text-xs rounded-xl active:scale-95 whitespace-nowrap">✏️改名</button>
+              <button @click="duplicateRecipe" class="py-1.5 bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200/80 text-amber-700 font-semibold text-xs rounded-xl active:scale-95 whitespace-nowrap">複製</button>
+              <button v-if="state.recipes.length > 1" @click="handleDeleteRecipe" class="py-1.5 font-semibold text-xs rounded-xl active:scale-95 transition whitespace-nowrap" :class="confirmDeleteRecipe ? 'bg-rose-600 text-white' : 'bg-white border border-slate-200 text-rose-600'">
+                {{ confirmDeleteRecipe ? '確認刪除' : '刪除' }}
+              </button>
+              <div v-else class="py-1.5 text-center text-[11px] text-slate-300 bg-slate-100/60 rounded-xl whitespace-nowrap">預設</div>
+            </div>
+          </div>
+
+          <form v-else @submit.prevent="saveRenameRecipe" class="flex items-center gap-2">
+            <input ref="renameInputRef" v-model="editingRecipeName" placeholder="輸入新配方名稱" class="flex-1 min-w-0 bg-white border border-amber-400 rounded-2xl px-3.5 py-2 font-bold text-slate-900 focus:outline-none" />
+            <button type="submit" class="px-3.5 py-2 bg-slate-900 text-white text-xs font-bold rounded-2xl shrink-0 whitespace-nowrap">完成</button>
+            <button type="button" @click="isEditingRecipeName = false" class="px-2.5 py-2 bg-white border border-slate-200 text-slate-500 text-xs font-semibold rounded-2xl shrink-0 whitespace-nowrap">取消</button>
+          </form>
+
+          <div class="grid grid-cols-2 gap-1 bg-slate-200/70 p-1 rounded-2xl">
+            <button @click="state.calcMode = 'mold'" :class="state.calcMode === 'mold' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500'" class="py-1.5 text-xs font-semibold rounded-xl transition whitespace-nowrap">依模具</button>
+            <button @click="state.calcMode = 'flour'" :class="state.calcMode === 'flour' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500'" class="py-1.5 text-xs font-semibold rounded-xl transition whitespace-nowrap">依總粉重</button>
+          </div>
+
+          <div v-if="state.calcMode === 'mold'" class="space-y-2">
+            <div class="grid grid-cols-2 gap-2">
+              <div v-for="m in state.molds" :key="m.id" class="bg-white border border-slate-200/70 rounded-2xl px-3 py-2 flex items-center justify-between gap-1">
+                <div class="min-w-0">
+                  <div class="text-xs font-bold text-slate-800 truncate">{{ m.shortName }}</div>
+                  <div class="text-[11px] text-slate-400 tabular-nums whitespace-nowrap">{{ m.baseDough }}g</div>
+                </div>
+                <div class="flex items-center gap-1.5 shrink-0">
+                  <button @click="m.qty = Math.max(0, m.qty - 1)" class="w-6 h-6 rounded-full bg-slate-100 text-slate-600 font-bold text-sm active:bg-slate-200">-</button>
+                  <span class="w-4 text-center font-bold text-xs tabular-nums text-slate-900">{{ m.qty }}</span>
+                  <button @click="m.qty++" class="w-6 h-6 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 text-white font-bold text-sm active:opacity-90">+</button>
+                </div>
+              </div>
+            </div>
+            <div v-if="totalActiveMolds === 0" class="text-center text-xs font-semibold text-amber-600 bg-amber-50 border border-amber-200/70 py-2 rounded-2xl">
+              請至少選擇 1 個模具以計算重量
+            </div>
+          </div>
+
+          <div v-else class="flex items-center justify-between bg-white border border-slate-200/70 px-3.5 py-2.5 rounded-2xl">
+            <span class="text-xs font-semibold text-slate-600 whitespace-nowrap">總粉重 (g)</span>
+            <input type="number" v-model.number="state.customFlour" min="50" step="10" class="w-24 text-right font-bold bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1 tabular-nums text-slate-900" />
+          </div>
+
+          <div class="flex items-center justify-between gap-2 pt-0.5 text-xs">
+            <label class="flex items-center gap-2 text-slate-600 font-medium cursor-pointer whitespace-nowrap">
+              <input type="checkbox" v-model="currentRecipe.useLossFactor" class="w-4 h-4 accent-amber-600 rounded" />
+              <span>損耗 1.1x</span>
+            </label>
+            <div class="flex items-center gap-1.5 text-slate-600 font-medium whitespace-nowrap">
+              <span>燙種比例</span>
+              <input type="number" v-model.number="currentRecipe.yudanePct" min="0" max="50" class="w-14 text-center font-bold bg-white border border-slate-200 rounded-xl px-1.5 py-0.5 tabular-nums text-slate-900" />
+              <span>%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 三大核心數據指標 -->
+        <div class="grid grid-cols-3 gap-2">
+          <div class="bg-gradient-to-br from-slate-50 via-white to-slate-100/90 border border-slate-200/75 py-3 px-2 rounded-3xl text-center">
+            <div class="text-[11px] font-medium text-slate-400 whitespace-nowrap">麵團總重</div>
+            <div class="text-base font-extrabold text-slate-900 mt-0.5 tabular-nums whitespace-nowrap">{{ totalDoughWeight }}g</div>
+          </div>
+          <div class="bg-gradient-to-br from-amber-50/90 via-orange-50/50 to-amber-100/60 border border-amber-200/70 py-3 px-2 rounded-3xl text-center">
+            <div class="text-[11px] font-medium text-amber-700/80 whitespace-nowrap">高粉總重</div>
+            <div class="text-base font-extrabold text-amber-600 mt-0.5 tabular-nums whitespace-nowrap">{{ targetFlourWeight }}g</div>
+          </div>
+          <div class="bg-gradient-to-br from-sky-50/80 via-white to-cyan-50/70 border border-sky-200/60 py-3 px-2 rounded-3xl text-center">
+            <div class="text-[11px] font-medium text-sky-700/75 whitespace-nowrap">總水合率</div>
+            <div class="text-base font-extrabold text-sky-700 mt-0.5 tabular-nums whitespace-nowrap">{{ hydrationPct }}%</div>
+          </div>
+        </div>
+
+        <!-- Day 1 燙種專屬顯示區塊 -->
+        <div v-if="currentRecipe.yudanePct > 0" class="bg-gradient-to-br from-amber-50 via-orange-50/70 to-amber-100/65 border border-amber-200/80 p-4 rounded-3xl space-y-3">
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+              <span class="text-xs font-extrabold text-amber-950 whitespace-nowrap">Day 1 前置燙種 (粉水比 1 : {{ currentRecipe.yudaneWaterRatio }})</span>
+            </div>
+            <span class="text-xs font-bold text-amber-700 bg-white/90 px-2.5 py-0.5 rounded-full border border-amber-200/70 tabular-nums whitespace-nowrap">
+              共 {{ yudaneTotal }}g
+            </span>
+          </div>
+          <div class="grid grid-cols-2 gap-2.5">
+            <div class="bg-gradient-to-b from-white to-amber-50/40 border border-amber-200/60 rounded-2xl p-3">
+              <div class="text-[11px] font-medium text-slate-500 whitespace-nowrap">高筋麵粉 ({{ currentRecipe.yudanePct }}%)</div>
+              <div class="text-lg font-extrabold text-slate-900 mt-0.5 tabular-nums whitespace-nowrap">{{ yudaneFlour }} <span class="text-xs font-semibold text-slate-400">g</span></div>
+            </div>
+            <div class="bg-gradient-to-b from-white to-amber-50/40 border border-amber-200/60 rounded-2xl p-3">
+              <div class="text-[11px] font-medium text-slate-500 whitespace-nowrap">100°C 沸水 (×{{ currentRecipe.yudaneWaterRatio }})</div>
+              <div class="text-lg font-extrabold text-amber-600 mt-0.5 tabular-nums whitespace-nowrap">{{ yudaneWater }} <span class="text-xs font-semibold text-amber-400">g</span></div>
+            </div>
+          </div>
+          <div v-if="yudaneWaterWarning" class="text-[11px] font-bold text-rose-600 bg-rose-50 border border-rose-200/80 px-3 py-1.5 rounded-xl">
+            ⚠️ 燙種沸水已超過配方總水量，請調降燙種比例或增加水量
+          </div>
+          <div v-else class="text-[11px] text-amber-800/80 px-0.5">
+            拌至無乾粉 ➔ 貼皮封存冷藏 12–24 小時
+          </div>
+        </div>
+
+        <!-- 配方投料明細表 (名稱在左對齊、屬性標籤在右) -->
+        <div class="bg-white border border-slate-200/80 rounded-3xl overflow-hidden shadow-[0_2px_10px_rgba(15,23,42,0.02)]">
+          <div class="px-4 py-3 bg-gradient-to-r from-slate-50 to-slate-100/60 border-b border-slate-100 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-bold text-slate-900 whitespace-nowrap">配方投料明細</span>
+              <span class="text-[10px] text-slate-400 whitespace-nowrap">點食材設含水率</span>
+            </div>
+            <button @click="addIngredient" class="text-xs font-bold text-amber-600 active:opacity-70 whitespace-nowrap">＋新增原料</button>
+          </div>
+          <div class="divide-y divide-slate-100">
+            <div class="grid grid-cols-12 px-3 py-2 text-[10px] font-bold text-slate-400 bg-slate-50/40">
+              <div class="col-span-4 whitespace-nowrap">品項 / 屬性</div>
+              <div class="col-span-2 text-center whitespace-nowrap">烘焙%</div>
+              <div class="col-span-2 text-right whitespace-nowrap">總重</div>
+              <div class="col-span-2 text-right text-amber-600 whitespace-nowrap">燙種</div>
+              <div class="col-span-2 text-right text-slate-700 whitespace-nowrap">主麵糰</div>
+            </div>
+            <div v-for="(item, idx) in computedIngredients" :key="item.id" class="grid grid-cols-12 items-center px-3 py-2.5 text-xs">
+              <!-- 名稱在左對齊、屬性標籤在右 -->
+              <div @click="openIngredientModal(item.id)" class="col-span-4 pr-1 min-w-0 flex items-center justify-between gap-1 cursor-pointer group">
+                <span class="font-bold text-slate-800 group-hover:text-amber-700 truncate">{{ item.name }}</span>
+                <span class="px-1.5 py-0.5 rounded-md text-[9px] font-extrabold shrink-0 whitespace-nowrap tabular-nums border transition" :class="item.isFlour ? 'bg-amber-50 text-amber-800 border-amber-200/80' : (getItemMoisture(item) > 0 ? 'bg-sky-50 text-sky-700 border-sky-200/80' : 'bg-slate-100 text-slate-500 border-slate-200/60')">
+                  {{ item.isFlour ? '粉' : (getItemMoisture(item) > 0 ? `濕${getItemMoisture(item)}%` : '料') }}
+                </span>
+              </div>
+              <div class="col-span-2 flex justify-center">
+                <input type="number" step="0.1" v-model.number="item.pct" class="w-13 max-w-[52px] text-center bg-slate-100 focus:bg-amber-50 border border-transparent focus:border-amber-300 rounded-xl py-1 px-0.5 font-bold text-slate-700 tabular-nums tracking-tight" />
+              </div>
+              <div class="col-span-2 text-right font-bold text-slate-900 tabular-nums whitespace-nowrap">{{ item.totalG }}g</div>
+              <div class="col-span-2 text-right font-semibold text-amber-600 tabular-nums whitespace-nowrap">{{ item.yudaneG > 0 ? item.yudaneG + 'g' : '—' }}</div>
+              <div class="col-span-2 text-right font-extrabold text-slate-900 tabular-nums whitespace-nowrap flex items-center justify-end gap-1">
+                <span>{{ item.mainG }}g</span>
+                <button v-if="currentRecipe.ingredients.length > 2" @click="removeIngredient(idx)" class="w-4 h-4 flex items-center justify-center rounded-full text-slate-300 hover:text-rose-500 hover:bg-rose-50 text-[10px] shrink-0">✕</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== 2. 計時與流程 ==================== -->
+      <section v-show="activeTab === 'timer'" class="space-y-3.5">
+        <div class="grid grid-cols-2 gap-2.5">
+          <div v-for="(tm, tIdx) in timers" :key="tm.id" class="border p-3.5 rounded-3xl flex flex-col justify-between space-y-2.5 transition" :class="tm.running ? (tIdx === 0 ? 'bg-gradient-to-br from-amber-50 via-orange-50/60 to-amber-100/70 border-amber-300 ring-2 ring-amber-500/15' : 'bg-gradient-to-br from-emerald-50 via-teal-50/60 to-emerald-100/70 border-emerald-300 ring-2 ring-emerald-500/15') : 'bg-gradient-to-b from-slate-50 to-slate-100/70 border-slate-200/80'">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-extrabold whitespace-nowrap" :class="tIdx === 0 ? 'text-amber-600' : 'text-emerald-600'">計時 {{ tm.id }}</span>
+              <button @click="tm.editingMins = !tm.editingMins" class="text-[11px] font-semibold text-slate-500 bg-white px-2 py-0.5 rounded-full border border-slate-200 whitespace-nowrap">
+                {{ tm.editingMins ? '關閉' : '設分鐘' }}
+              </button>
+            </div>
+
+            <form v-if="tm.editingMins" @submit.prevent="setCustomTimerMins(tIdx)" class="flex items-center gap-1">
+              <input type="number" min="1" max="999" v-model.number="tm.customInput" placeholder="分" class="w-full min-w-0 bg-white border border-slate-300 rounded-xl px-2 py-1 text-center font-bold tabular-nums" />
+              <button type="submit" class="px-2.5 py-1 bg-slate-900 text-white text-xs font-bold rounded-xl shrink-0 whitespace-nowrap">設定</button>
+            </form>
+            <div v-else class="text-[11px] font-medium text-slate-500 truncate">{{ tm.label || '點下方步驟或設分鐘' }}</div>
+
+            <div class="text-3xl font-extrabold text-center tracking-tight tabular-nums whitespace-nowrap text-slate-900">
+              {{ formatSeconds(tm.seconds) }}
+            </div>
+            <div class="grid grid-cols-3 gap-1.5">
+              <button @click="toggleTimer(tIdx)" class="col-span-2 py-2 rounded-2xl font-bold text-xs active:scale-95 transition whitespace-nowrap" :class="tm.running ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white' : 'bg-gradient-to-r from-slate-800 to-slate-950 text-white'">
+                {{ tm.running ? '暫停' : '開始' }}
+              </button>
+              <button @click="resetTimer(tIdx)" class="py-2 rounded-2xl bg-white border border-slate-200 text-slate-600 font-semibold text-xs active:scale-95 transition whitespace-nowrap">
+                歸零
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-gradient-to-r from-slate-50 to-amber-50/40 border border-slate-200/70 px-4 py-3 rounded-3xl flex items-center justify-between gap-2">
+          <div class="text-xs">
+            <span class="text-slate-400 font-medium whitespace-nowrap">預計出爐時間</span>
+            <div class="font-bold text-amber-600 mt-0.5 tabular-nums whitespace-nowrap">建議開工 {{ suggestedStartTime }}</div>
+          </div>
+          <input type="time" v-model="state.targetBakeEnd" class="bg-white border border-slate-200 rounded-2xl px-3 py-1.5 font-bold text-slate-900 tabular-nums shrink-0" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-2.5 text-xs">
+          <div class="bg-gradient-to-br from-orange-50/70 to-amber-50/50 border border-amber-200/60 px-3.5 py-2.5 rounded-2xl">
+            <div class="font-bold text-amber-950 whitespace-nowrap">晶工烤箱 (下層)</div>
+            <div class="text-[11px] text-amber-800/80 mt-0.5 tabular-nums whitespace-nowrap">160 / 200°C</div>
+          </div>
+          <div class="bg-gradient-to-br from-sky-50/70 to-indigo-50/50 border border-sky-200/60 px-3.5 py-2.5 rounded-2xl">
+            <div class="font-bold text-sky-950 whitespace-nowrap">國際牌烤箱 (下層)</div>
+            <div class="text-[11px] text-sky-800/80 mt-0.5 tabular-nums whitespace-nowrap">170 / 210°C</div>
+          </div>
+        </div>
+
+        <div v-for="(stage, sIdx) in state.sopStages" :key="sIdx" class="bg-white border border-slate-200/80 rounded-3xl overflow-hidden">
+          <div class="px-4 py-2.5 bg-gradient-to-r from-slate-50 to-slate-100/60 border-b border-slate-100 flex justify-between items-center">
+            <span class="text-xs font-bold text-slate-900 truncate">{{ stage.title }}</span>
+            <button @click="stage.steps.forEach(s => s.done = false)" class="text-[11px] font-medium text-slate-400 whitespace-nowrap">重置</button>
+          </div>
+          <div class="divide-y divide-slate-100">
+            <div v-for="(step, idx) in stage.steps" :key="idx" class="px-4 py-3 flex items-center gap-3" :class="step.done ? 'opacity-40' : ''">
+              <input type="checkbox" v-model="step.done" class="w-4 h-4 accent-amber-600 shrink-0 rounded" />
+              <div class="flex-1 min-w-0">
+                <div class="text-xs font-bold text-slate-800" :class="step.done ? 'line-through' : ''">{{ step.name }}</div>
+                <div class="text-[11px] text-slate-500 truncate mt-0.5">{{ step.desc }}</div>
+              </div>
+              <div v-if="step.mins > 0" class="flex gap-1 shrink-0">
+                <button @click="assignTimer(0, step.name, step.mins)" class="px-2 py-1 bg-gradient-to-b from-amber-50 to-amber-100/70 border border-amber-200/80 text-amber-700 font-bold text-[11px] rounded-xl active:scale-95 whitespace-nowrap tabular-nums">A·{{ step.mins }}m</button>
+                <button @click="assignTimer(1, step.name, step.mins)" class="px-2 py-1 bg-gradient-to-b from-emerald-50 to-emerald-100/70 border border-emerald-200/80 text-emerald-700 font-bold text-[11px] rounded-xl active:scale-95 whitespace-nowrap tabular-nums">B·{{ step.mins }}m</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== 3. 成本 ==================== -->
+      <section v-show="activeTab === 'cost'" class="space-y-3.5">
+        <div class="bg-gradient-to-br from-slate-900 via-slate-800 to-stone-900 text-white p-4 rounded-3xl grid grid-cols-3 gap-2 text-center shadow-sm">
+          <div>
+            <div class="text-[11px] text-slate-400 whitespace-nowrap">單顆成本</div>
+            <div class="text-lg font-extrabold mt-0.5 tabular-nums whitespace-nowrap">${{ unitTotalCost }}</div>
+          </div>
+          <div>
+            <div class="text-[11px] text-slate-400 whitespace-nowrap">建議售價</div>
+            <div class="text-lg font-extrabold text-amber-400 mt-0.5 tabular-nums whitespace-nowrap">${{ suggestedPrice }}</div>
+          </div>
+          <div>
+            <div class="text-[11px] text-slate-400 whitespace-nowrap">預估淨利</div>
+            <div class="text-lg font-extrabold text-emerald-400 mt-0.5 tabular-nums whitespace-nowrap">${{ unitProfit }}</div>
+          </div>
+        </div>
+
+        <div class="bg-gradient-to-b from-slate-50 to-slate-100/70 border border-slate-200/75 p-4 rounded-3xl grid grid-cols-4 gap-2">
+          <div>
+            <label class="text-[10px] font-medium text-slate-500 block mb-1 whitespace-nowrap">產出顆數</label>
+            <input type="number" min="1" v-model.number="state.pricing.customYield" :placeholder="String(autoMoldCount)" class="w-full bg-white border border-slate-200 rounded-2xl px-2 py-1.5 font-bold tabular-nums text-slate-900 text-center" />
+          </div>
+          <div>
+            <label class="text-[10px] font-medium text-slate-500 block mb-1 whitespace-nowrap">包材/顆</label>
+            <input type="number" min="0" v-model.number="state.pricing.packagingPerUnit" class="w-full bg-white border border-slate-200 rounded-2xl px-2 py-1.5 font-bold tabular-nums text-slate-900 text-center" />
+          </div>
+          <div>
+            <label class="text-[10px] font-medium text-slate-500 block mb-1 whitespace-nowrap">水電/爐</label>
+            <input type="number" min="0" v-model.number="state.pricing.utilityPerBatch" class="w-full bg-white border border-slate-200 rounded-2xl px-2 py-1.5 font-bold tabular-nums text-slate-900 text-center" />
+          </div>
+          <div>
+            <label class="text-[10px] font-medium text-slate-500 block mb-1 whitespace-nowrap">毛利 %</label>
+            <input type="number" min="5" max="90" v-model.number="state.pricing.marginPct" class="w-full bg-white border border-slate-200 rounded-2xl px-2 py-1.5 font-bold text-amber-600 tabular-nums text-center" />
+          </div>
+        </div>
+
+        <div class="bg-white border border-slate-200/80 rounded-3xl overflow-hidden">
+          <div class="px-4 py-3 bg-gradient-to-r from-slate-50 to-amber-50/40 border-b border-slate-100 flex justify-between items-center">
+            <span class="text-xs font-bold text-slate-900 whitespace-nowrap">採購規格與價格</span>
+            <span class="text-xs font-extrabold text-amber-700 tabular-nums whitespace-nowrap">本批原料 ${{ batchIngredientCost }}</span>
+          </div>
+          <div class="grid grid-cols-12 px-3.5 py-2 text-[10px] font-bold text-slate-400 bg-slate-50/40 border-b border-slate-100">
+            <div class="col-span-4 whitespace-nowrap">原料 / 本批用量</div>
+            <div class="col-span-4 text-center whitespace-nowrap">購入克數 (g)</div>
+            <div class="col-span-4 text-right whitespace-nowrap">購入價格 ($)</div>
+          </div>
+          <div class="divide-y divide-slate-100">
+            <div v-for="item in computedIngredients" :key="item.id" class="grid grid-cols-12 items-center px-3.5 py-2.5 gap-1.5 text-xs">
+              <div class="col-span-4 min-w-0">
+                <div class="font-bold text-slate-800 truncate">{{ item.name }}</div>
+                <div class="text-[10px] text-slate-400 tabular-nums whitespace-nowrap">
+                  用{{ item.totalG }}g · <span class="text-amber-600 font-semibold">${{ calcItemBatchCost(item).toFixed(1) }}</span>
+                </div>
+              </div>
+              <div class="col-span-4 flex justify-center">
+                <input type="number" min="1" v-model.number="ensurePurchaseItem(item.name).grams" placeholder="g" class="w-full max-w-[78px] text-center bg-slate-50 border border-slate-200 rounded-xl px-1.5 py-1 font-bold tabular-nums text-slate-800" />
+              </div>
+              <div class="col-span-4 flex justify-end">
+                <input type="number" min="0" step="0.5" v-model.number="ensurePurchaseItem(item.name).price" placeholder="$" class="w-full max-w-[78px] text-right bg-amber-50/50 border border-amber-200/80 rounded-xl px-2 py-1 font-bold tabular-nums text-slate-900" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== 4. 日誌 ==================== -->
+      <section v-show="activeTab === 'lab'" class="space-y-3.5">
+        <form @submit.prevent="addLog" class="bg-gradient-to-b from-slate-50 to-slate-100/70 border border-slate-200/75 p-4 rounded-3xl space-y-3">
+          <div class="grid grid-cols-3 gap-2">
+            <input v-model="newLog.doughTemp" placeholder="終溫 25°C" class="bg-white border border-slate-200 rounded-2xl px-3 py-2 text-xs font-semibold text-slate-900" />
+            <input v-model="newLog.env" placeholder="環境 28°C/75%" class="bg-white border border-slate-200 rounded-2xl px-3 py-2 text-xs font-semibold text-slate-900" />
+            <select v-model="newLog.oven" class="bg-white border border-slate-200 rounded-2xl px-2.5 py-2 text-xs font-semibold text-slate-900">
+              <option>晶工</option>
+              <option>國際牌</option>
+              <option>其他</option>
+            </select>
+          </div>
+          <textarea v-model="newLog.note" rows="2" placeholder="記錄組織、滿模度與調整方向..." class="w-full bg-white border border-slate-200 rounded-2xl p-3 text-xs text-slate-900"></textarea>
+          <button type="submit" class="w-full py-2.5 bg-gradient-to-r from-slate-800 to-slate-950 text-white font-bold rounded-2xl text-xs active:scale-95 transition whitespace-nowrap">儲存筆記</button>
+        </form>
+
+        <div class="space-y-2.5">
+          <div v-for="(log, idx) in state.logs" :key="log.id" class="bg-gradient-to-br from-white to-slate-50/80 border border-slate-200/80 p-4 rounded-3xl space-y-1.5">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-[11px] font-bold text-amber-600 truncate">{{ log.date }} · {{ log.recipeName }}</span>
+              <button @click="state.logs.splice(idx, 1)" class="text-[11px] text-slate-400 hover:text-rose-500 shrink-0 whitespace-nowrap">刪除</button>
+            </div>
+            <div class="text-[11px] text-slate-400 font-medium tabular-nums whitespace-nowrap">{{ log.doughTemp || '-' }} · {{ log.env || '-' }} · {{ log.oven }}</div>
+            <p class="text-xs text-slate-700 leading-relaxed">{{ log.note }}</p>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- 純白極簡底部導覽列 -->
+    <nav class="bg-white/95 backdrop-blur-md border-t border-slate-100 grid grid-cols-4 pt-2 px-3 safe-bottom shrink-0 z-20">
+      <button v-for="tab in tabs" :key="tab.id" @click="activeTab = tab.id" class="flex flex-col items-center justify-center py-1 transition" :class="activeTab === tab.id ? 'text-amber-600 font-bold' : 'text-slate-400 font-medium'">
+        <span class="text-base leading-none mb-1">{{ tab.icon }}</span>
+        <span class="text-[11px] whitespace-nowrap">{{ tab.label }}</span>
+      </button>
+    </nav>
+  </div>
+
+  <script>
+    const { createApp, ref, reactive, computed, watch, onMounted, nextTick } = Vue;
+
+    createApp({
+      setup() {
+        const STORAGE_KEY = 'artisan_bread_lab_v1';
+        const CLOUD_CFG_KEY = 'pon_bakery_cloud_cfg_v1';
+        const activeTab = ref('calc');
+        const toast = reactive({ show: false, msg: '' });
+        let toastTimer = null;
+
+        const notify = (msg) => {
+          toast.msg = msg; toast.show = true;
+          clearTimeout(toastTimer);
+          toastTimer = setTimeout(() => { toast.show = false; }, 2400);
+        };
+
+        let wakeLock = null;
+        const requestWakeLock = async () => {
+          try {
+            if ('wakeLock' in navigator && !wakeLock) {
+              wakeLock = await navigator.wakeLock.request('screen');
+              wakeLock.addEventListener('release', () => { wakeLock = null; });
+            }
+          } catch (e) {}
+        };
+        const releaseWakeLock = () => {
+          if (wakeLock) { wakeLock.release().catch(() => {}); wakeLock = null; }
+        };
+
+        const defaultPurchases = {
+          '高筋麵粉': { grams: 1000, price: 85 },
+          '水': { grams: 1000, price: 1 },
+          '全脂牛奶': { grams: 936, price: 86 },
+          '奶粉': { grams: 400, price: 130 },
+          '細砂糖': { grams: 500, price: 24 },
+          '鹽': { grams: 500, price: 15 },
+          '乾酵母': { grams: 125, price: 55 },
+          '無鹽奶油': { grams: 454, price: 195 }
+        };
+
+        const defaultState = {
+          selectedRecipeId: 'maitian-74-15',
+          calcMode: 'mold',
+          customFlour: 500,
+          targetBakeEnd: '15:00',
+          molds: [
+            { id: 'm12', name: '12兩(黑) 2285ml', shortName: '12兩(黑)', baseDough: 500, bakeTime: '30-33', qty: 1 },
+            { id: 'm10', name: '10*(銀) 1000ml', shortName: '10*(銀)', baseDough: 250, bakeTime: '25-28', qty: 1 },
+            { id: 'm75', name: '7.5*(銀) 422ml', shortName: '7.5*(銀)', baseDough: 105, bakeTime: '21-25', qty: 1 },
+            { id: 'm6',  name: '6*(銀) 216ml',   shortName: '6*(銀)', baseDough: 55,  bakeTime: '16-18', qty: 1 }
+          ],
+          recipes: [
+            {
+              id: 'maitian-74-15',
+              name: '麥典74%+15%柔軟吐司 (直接法)',
+              useLossFactor: true,
+              lossFactor: 1.1,
+              yudanePct: 15,
+              yudaneWaterRatio: 1.2,
+              ingredients: [
+                { id: 'i1', name: '高筋麵粉', pct: 100, isFlour: true, isLiquid: false, moisturePct: 0 },
+                { id: 'i2', name: '水', pct: 42, isFlour: false, isLiquid: true, isWater: true, moisturePct: 100 },
+                { id: 'i3', name: '全脂牛奶', pct: 35, isFlour: false, isLiquid: true, moisturePct: 87 },
+                { id: 'i4', name: '奶粉', pct: 4, isFlour: false, isLiquid: false, moisturePct: 0 },
+                { id: 'i5', name: '細砂糖', pct: 10, isFlour: false, isLiquid: false, moisturePct: 0 },
+                { id: 'i6', name: '鹽', pct: 1.8, isFlour: false, isLiquid: false, moisturePct: 0 },
+                { id: 'i7', name: '乾酵母', pct: 1.2, isFlour: false, isLiquid: false, moisturePct: 0 },
+                { id: 'i8', name: '無鹽奶油', pct: 10, isFlour: false, isLiquid: false, moisturePct: 0 }
+              ]
+            }
+          ],
+          sopStages: [
+            {
+              title: 'Day 1 · 燙種 (1:1.2)',
+              steps: [
+                { name: '100°C 沸水沖燙', desc: '槳式拌至無乾粉，貼皮冷藏 12-24h', mins: 0, done: false }
+              ]
+            },
+            {
+              title: 'Day 2 · 攪拌與基發 (終溫 24-26°C)',
+              steps: [
+                { name: '一速拌勻', desc: '冰燙種切碎與主材料拌合', mins: 2, done: false },
+                { name: '二速類薄膜', desc: '攪拌 6-8 分鐘至類薄膜狀', mins: 7, done: false },
+                { name: '冷藏鬆弛', desc: '靜置降溫水合', mins: 20, done: false },
+                { name: '加冰奶油', desc: '二速拌至完全吸收', mins: 2, done: false },
+                { name: '三速手套膜', desc: '4-6 分鐘，終溫 24-26°C', mins: 5, done: false },
+                { name: '基本發酵', desc: '收圓發酵 60 分鐘', mins: 60, done: false }
+              ]
+            },
+            {
+              title: 'Day 2 · 整形與烤焙',
+              steps: [
+                { name: '分割中間發酵', desc: '28°C / 75% 密閉鬆弛', mins: 20, done: false },
+                { name: '一次擀捲鬆弛', desc: '長舌狀輕捲 (6*模短捲即可)', mins: 10, done: false },
+                { name: '二次捲製最後發酵', desc: '捲 2.5 圈入模，35°C / 85% 至 8 分滿', mins: 60, done: false },
+                { name: '下層烤焙', desc: '12兩 31分 · 10* 26分 · 7.5* 23分 · 6* 17分', mins: 30, done: false }
+              ]
+            }
+          ],
+          purchases: JSON.parse(JSON.stringify(defaultPurchases)),
+          pricing: { customYield: null, packagingPerUnit: 8, utilityPerBatch: 35, marginPct: 50 },
+          logs: [
+            {
+              id: 'log-init',
+              date: '基準紀錄',
+              recipeName: '麥典74%+15%柔軟吐司',
+              doughTemp: '25.2°C',
+              env: '28°C/75%',
+              oven: '晶工',
+              note: '燙種冷藏16小時，8分滿帶蓋烤32分鐘，組織綿密保濕。'
+            }
+          ]
+        };
+
+        const state = reactive(JSON.parse(JSON.stringify(defaultState)));
+
+        // Supabase 雲端同步與自動保活
+        const showCloudModal = ref(false);
+        const cloudStatus = ref('offline'); // 'offline' | 'syncing' | 'connected'
+        const cloudForm = reactive({ url: '', key: '', syncId: 'pon_bakery_01' });
+        const cloudMeta = reactive({ lastPing: '', lastPingTs: 0 });
+        let supabaseClient = null;
+        let cloudSyncDebounce = null;
+        let isApplyingRemote = false;
+
+        const initSupabaseClient = () => {
+          if (!cloudForm.url || !cloudForm.key || !window.supabase) {
+            supabaseClient = null;
+            cloudStatus.value = 'offline';
+            return false;
+          }
+          try {
+            supabaseClient = window.supabase.createClient(cloudForm.url, cloudForm.key);
+            return true;
+          } catch (e) {
+            supabaseClient = null;
+            cloudStatus.value = 'offline';
+            return false;
+          }
+        };
+
+        const formatNowStr = () => {
+          const d = new Date();
+          return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+        };
+
+        const pushToCloud = async (silent = true) => {
+          if (!supabaseClient) return;
+          cloudStatus.value = 'syncing';
+          try {
+            const payload = JSON.parse(JSON.stringify(state));
+            const { error } = await supabaseClient
+              .from('bakery_sync')
+              .upsert({ id: cloudForm.syncId || 'pon_bakery_01', payload, updated_at: new Date().toISOString() });
+            if (error) throw error;
+            cloudStatus.value = 'connected';
+            cloudMeta.lastPing = formatNowStr();
+            cloudMeta.lastPingTs = Date.now();
+            localStorage.setItem(CLOUD_CFG_KEY, JSON.stringify({ ...cloudForm, ...cloudMeta }));
+            if (!silent) notify('雲端同步與喚醒成功');
+          } catch (e) {
+            cloudStatus.value = 'offline';
+            if (!silent) notify('雲端連線失敗，請檢查設定');
+          }
+        };
+
+        const pullFromCloud = async () => {
+          if (!supabaseClient) { notify('請先填寫連線資訊'); return; }
+          cloudStatus.value = 'syncing';
+          try {
+            const { data, error } = await supabaseClient
+              .from('bakery_sync')
+              .select('payload')
+              .eq('id', cloudForm.syncId || 'pon_bakery_01')
+              .maybeSingle();
+            if (error) throw error;
+            if (data && data.payload) {
+              isApplyingRemote = true;
+              Object.assign(state, data.payload);
+              setTimeout(() => { isApplyingRemote = false; }, 300);
+              notify('已從雲端還原最新資料');
+            } else {
+              await pushToCloud(false);
+            }
+            cloudStatus.value = 'connected';
+            cloudMeta.lastPing = formatNowStr();
+            cloudMeta.lastPingTs = Date.now();
+            localStorage.setItem(CLOUD_CFG_KEY, JSON.stringify({ ...cloudForm, ...cloudMeta }));
+          } catch (e) {
+            cloudStatus.value = 'offline';
+            notify('拉取失敗，請確認資料表已建立');
+          }
+        };
+
+        const pingAndSyncCloud = async (manual = false) => {
+          if (!supabaseClient) return;
+          cloudStatus.value = 'syncing';
+          try {
+            const { error } = await supabaseClient
+              .from('bakery_sync')
+              .select('id')
+              .eq('id', cloudForm.syncId || 'pon_bakery_01')
+              .maybeSingle();
+            if (error) throw error;
+            cloudStatus.value = 'connected';
+            cloudMeta.lastPing = formatNowStr();
+            cloudMeta.lastPingTs = Date.now();
+            localStorage.setItem(CLOUD_CFG_KEY, JSON.stringify({ ...cloudForm, ...cloudMeta }));
+            if (manual) notify('資料庫喚醒正常 (已重設7天計時)');
+          } catch (e) {
+            cloudStatus.value = 'offline';
+            if (manual) notify('喚醒失敗，請檢查網址與金鑰');
+          }
+        };
+
+        const saveCloudConfig = async () => {
+          if (!cloudForm.url || !cloudForm.key) {
+            notify('請輸入 URL 與 Key');
+            return;
+          }
+          if (initSupabaseClient()) {
+            await pushToCloud(false);
+            showCloudModal.value = false;
+          }
+        };
+
+        const disconnectCloud = () => {
+          cloudForm.url = ''; cloudForm.key = '';
+          supabaseClient = null; cloudStatus.value = 'offline';
+          localStorage.removeItem(CLOUD_CFG_KEY);
+          showCloudModal.value = false;
+          notify('已切換回純本機離線模式');
+        };
+
+        const getItemMoisture = (item) => {
+          if (typeof item.moisturePct === 'number') return item.moisturePct;
+          if (item.isFlour) return 0;
+          if (item.isWater || item.name === '水' || item.name === '冰水') return 100;
+          if (item.isLiquid) return Math.round((item.liquidFactor || 0.87) * 100);
+          return 0;
+        };
+
+        onMounted(() => {
+          try {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+              const parsed = JSON.parse(saved);
+              if (parsed.molds) {
+                parsed.molds = parsed.molds.map((m, i) => ({
+                  ...m,
+                  shortName: m.shortName || defaultState.molds[i]?.shortName || m.name
+                }));
+              }
+              if (parsed.recipes) {
+                parsed.recipes.forEach(r => {
+                  (r.ingredients || []).forEach(ing => {
+                    if (typeof ing.moisturePct !== 'number') {
+                      ing.moisturePct = getItemMoisture(ing);
+                    }
+                  });
+                });
+              }
+              if (!parsed.purchases) {
+                parsed.purchases = JSON.parse(JSON.stringify(defaultPurchases));
+                if (parsed.unitPrices) {
+                  for (const [k, v] of Object.entries(parsed.unitPrices)) {
+                    if (typeof v === 'number') parsed.purchases[k] = { grams: 1000, price: v };
+                  }
+                }
+              }
+              Object.assign(state, parsed);
+            }
+          } catch (e) {}
+
+          try {
+            const savedCloud = localStorage.getItem(CLOUD_CFG_KEY);
+            if (savedCloud) {
+              const cfg = JSON.parse(savedCloud);
+              Object.assign(cloudForm, { url: cfg.url || '', key: cfg.key || '', syncId: cfg.syncId || 'pon_bakery_01' });
+              cloudMeta.lastPing = cfg.lastPing || '';
+              cloudMeta.lastPingTs = cfg.lastPingTs || 0;
+              if (initSupabaseClient()) {
+                pingAndSyncCloud(false);
+              }
+            }
+          } catch (e) {}
+        });
+
+        watch(state, (val) => {
+          try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(val));
+          } catch (e) {
+            notify('儲存空間已滿，請匯出備份');
+          }
+          if (supabaseClient && !isApplyingRemote) {
+            clearTimeout(cloudSyncDebounce);
+            cloudSyncDebounce = setTimeout(() => { pushToCloud(true); }, 1500);
+          }
+        }, { deep: true });
+
+        // 食材屬性與含水率設定小視窗
+        const editingIngredientId = ref(null);
+        const ingModalForm = reactive({ name: '', type: 'wet', moisturePct: 87, isWater: false });
+
+        const moisturePresets = [
+          { label: '純水', pct: 100 },
+          { label: '蛋白', pct: 88 },
+          { label: '牛奶', pct: 87 },
+          { label: '全蛋', pct: 75 },
+          { label: '鮮奶油', pct: 60 },
+          { label: '煉乳', pct: 27 },
+          { label: '龍眼蜜', pct: 17 },
+          { label: '無鹽奶油', pct: 15 }
+        ];
+
+        const editingIngredient = computed(() => {
+          if (!editingIngredientId.value) return null;
+          return currentRecipe.value.ingredients.find(i => i.id === editingIngredientId.value) || null;
+        });
+
+        const openIngredientModal = (id) => {
+          const target = currentRecipe.value.ingredients.find(i => i.id === id);
+          if (!target) return;
+          editingIngredientId.value = id;
+          ingModalForm.name = target.name;
+          const m = getItemMoisture(target);
+          if (target.isFlour) {
+            ingModalForm.type = 'flour';
+            ingModalForm.moisturePct = 0;
+            ingModalForm.isWater = false;
+          } else if (target.isLiquid || m > 0) {
+            ingModalForm.type = 'wet';
+            ingModalForm.moisturePct = m > 0 ? m : 87;
+            ingModalForm.isWater = Boolean(target.isWater || target.name === '水' || target.name === '冰水');
+          } else {
+            ingModalForm.type = 'dry';
+            ingModalForm.moisturePct = 0;
+            ingModalForm.isWater = false;
+          }
+        };
+
+        const setModalType = (newType) => {
+          ingModalForm.type = newType;
+          if (newType === 'wet' && (!ingModalForm.moisturePct || ingModalForm.moisturePct <= 0)) {
+            ingModalForm.moisturePct = 87;
+          }
+          if (newType !== 'wet') {
+            ingModalForm.moisturePct = 0;
+            ingModalForm.isWater = false;
+          }
+        };
+
+        const closeIngredientModal = () => { editingIngredientId.value = null; };
+
+        const saveIngredientModal = () => {
+          const target = editingIngredient.value;
+          if (!target) return;
+          const trimmedName = ingModalForm.name.trim();
+          if (trimmedName) target.name = trimmedName;
+
+          if (ingModalForm.type === 'flour') {
+            target.isFlour = true; target.isLiquid = false; target.isWater = false; target.moisturePct = 0;
+          } else if (ingModalForm.type === 'wet') {
+            target.isFlour = false; target.isLiquid = true; target.isWater = Boolean(ingModalForm.isWater);
+            target.moisturePct = Math.min(100, Math.max(0, Number(ingModalForm.moisturePct) || 0));
+          } else {
+            target.isFlour = false; target.isLiquid = false; target.isWater = false; target.moisturePct = 0;
+          }
+          closeIngredientModal();
+          notify('已更新食材含水率設定');
+        };
+
+        // 配方管理
+        const currentRecipe = computed(() => state.recipes.find(r => r.id === state.selectedRecipeId) || state.recipes[0]);
+        const isEditingRecipeName = ref(false);
+        const editingRecipeName = ref('');
+        const renameInputRef = ref(null);
+        const confirmDeleteRecipe = ref(false);
+
+        const createNewRecipe = () => {
+          const newId = 'r-' + Date.now();
+          state.recipes.push({
+            id: newId,
+            name: `自訂新配方 #${state.recipes.length + 1}`,
+            useLossFactor: false,
+            lossFactor: 1.1,
+            yudanePct: 0,
+            yudaneWaterRatio: 1.2,
+            ingredients: [
+              { id: 'i1-' + Date.now(), name: '高筋麵粉', pct: 100, isFlour: true, isLiquid: false, moisturePct: 0 },
+              { id: 'i2-' + Date.now(), name: '水', pct: 68, isFlour: false, isLiquid: true, isWater: true, moisturePct: 100 },
+              { id: 'i3-' + Date.now(), name: '細砂糖', pct: 8, isFlour: false, isLiquid: false, moisturePct: 0 },
+              { id: 'i4-' + Date.now(), name: '鹽', pct: 1.8, isFlour: false, isLiquid: false, moisturePct: 0 },
+              { id: 'i5-' + Date.now(), name: '乾酵母', pct: 1.2, isFlour: false, isLiquid: false, moisturePct: 0 },
+              { id: 'i6-' + Date.now(), name: '無鹽奶油', pct: 8, isFlour: false, isLiquid: false, moisturePct: 0 }
+            ]
+          });
+          state.selectedRecipeId = newId;
+          confirmDeleteRecipe.value = false;
+          startRenameRecipe();
+          notify('已建立空白新配方');
+        };
+
+        const startRenameRecipe = () => {
+          editingRecipeName.value = currentRecipe.value.name;
+          isEditingRecipeName.value = true;
+          confirmDeleteRecipe.value = false;
+          nextTick(() => { if (renameInputRef.value) renameInputRef.value.focus(); });
+        };
+
+        const saveRenameRecipe = () => {
+          const trimmed = editingRecipeName.value.trim();
+          if (trimmed) { currentRecipe.value.name = trimmed; notify('配方名稱已更新'); }
+          isEditingRecipeName.value = false;
+        };
+
+        const duplicateRecipe = () => {
+          const copy = JSON.parse(JSON.stringify(currentRecipe.value));
+          copy.id = 'r-' + Date.now();
+          copy.name = copy.name.replace(/\s*\(複本\d*\)$/, '') + ` (複本)`;
+          state.recipes.push(copy);
+          state.selectedRecipeId = copy.id;
+          confirmDeleteRecipe.value = false;
+          notify('已複製配方');
+        };
+
+        const handleDeleteRecipe = () => {
+          if (state.recipes.length <= 1) return;
+          if (!confirmDeleteRecipe.value) {
+            confirmDeleteRecipe.value = true;
+            setTimeout(() => { confirmDeleteRecipe.value = false; }, 3500);
+            return;
+          }
+          const idx = state.recipes.findIndex(r => r.id === state.selectedRecipeId);
+          if (idx > -1) {
+            state.recipes.splice(idx, 1);
+            state.selectedRecipeId = state.recipes[0].id;
+            confirmDeleteRecipe.value = false;
+            notify('已移除配方');
+          }
+        };
+
+        // 配方核心計算
+        const totalBakerPct = computed(() => Number(currentRecipe.value.ingredients.reduce((sum, i) => sum + (Number(i.pct) || 0), 0).toFixed(1)));
+        const totalActiveMolds = computed(() => state.molds.reduce((sum, m) => sum + (Number(m.qty) || 0), 0));
+
+        const targetFlourWeight = computed(() => {
+          const r = currentRecipe.value;
+          if (state.calcMode === 'flour') return Math.max(1, Number(state.customFlour) || 500);
+          const rawDough = state.molds.reduce((sum, m) => sum + (m.baseDough * (Number(m.qty) || 0)), 0);
+          if (rawDough <= 0) return 0;
+          const withLoss = r.useLossFactor ? rawDough * (r.lossFactor || 1.1) : rawDough;
+          return Math.round((withLoss / (totalBakerPct.value || 100)) * 100);
+        });
+
+        const yudaneFlour = computed(() => Math.round(targetFlourWeight.value * ((currentRecipe.value.yudanePct || 0) / 100)));
+        const yudaneWater = computed(() => Math.round(yudaneFlour.value * (currentRecipe.value.yudaneWaterRatio || 1.2)));
+        const yudaneTotal = computed(() => yudaneFlour.value + yudaneWater.value);
+
+        const primaryWaterIndex = computed(() => {
+          const ings = currentRecipe.value.ingredients;
+          const explicit = ings.findIndex(i => i.isWater || i.name === '水' || i.name === '冰水');
+          if (explicit > -1) return explicit;
+          return ings.findIndex(i => getItemMoisture(i) > 0);
+        });
+
+        const computedIngredients = computed(() => {
+          const flour = targetFlourWeight.value;
+          const wIdx = primaryWaterIndex.value;
+          return currentRecipe.value.ingredients.map((item, idx) => {
+            const totalG = Math.round((flour * (Number(item.pct) || 0)) / 100);
+            let yudaneG = 0;
+            if (idx === 0) yudaneG = Math.min(totalG, yudaneFlour.value);
+            if (idx === wIdx && yudaneWater.value > 0) yudaneG = Math.min(totalG, yudaneWater.value);
+            const mainG = Math.max(0, totalG - yudaneG);
+            return { ...item, totalG, yudaneG, mainG };
+          });
+        });
+
+        const yudaneWaterWarning = computed(() => {
+          if ((currentRecipe.value.yudanePct || 0) <= 0 || targetFlourWeight.value <= 0) return false;
+          const wIdx = primaryWaterIndex.value;
+          if (wIdx === -1) return true;
+          const waterTotalG = computedIngredients.value[wIdx]?.totalG || 0;
+          return yudaneWater.value > waterTotalG;
+        });
+
+        const totalDoughWeight = computed(() => computedIngredients.value.reduce((s, i) => s + i.totalG, 0));
+
+        const hydrationPct = computed(() => {
+          const flourPctSum = currentRecipe.value.ingredients.reduce((sum, i) => i.isFlour ? sum + Number(i.pct || 0) : sum, 0) || 100;
+          const effectiveWaterPct = currentRecipe.value.ingredients.reduce((sum, i) => {
+            const m = getItemMoisture(i);
+            if (m <= 0) return sum;
+            return sum + Number(i.pct || 0) * (m / 100);
+          }, 0);
+          return ((effectiveWaterPct / flourPctSum) * 100).toFixed(1);
+        });
+
+        // 雙軌計時器
+        const timers = reactive([
+          { id: 'A', seconds: 0, running: false, label: '', editingMins: false, customInput: 15, intervalId: null },
+          { id: 'B', seconds: 0, running: false, label: '', editingMins: false, customInput: 15, intervalId: null }
+        ]);
+
+        const activeRunningTimer = computed(() => timers.find(t => t.running) || null);
+
+        watch(activeRunningTimer, (runningTm) => {
+          if (runningTm) requestWakeLock();
+          else releaseWakeLock();
+        });
+
+        const playBeep = () => {
+          try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            osc.type = 'sine'; osc.frequency.setValueAtTime(880, ctx.currentTime);
+            osc.connect(ctx.destination); osc.start(); osc.stop(ctx.currentTime + 0.5);
+            if (navigator.vibrate) navigator.vibrate([300, 150, 300]);
+          } catch (e) {}
+        };
+
+        const runCountdown = (tIdx) => {
+          const tm = timers[tIdx];
+          clearInterval(tm.intervalId);
+          tm.running = true;
+          tm.intervalId = setInterval(() => {
+            if (tm.seconds > 0) {
+              tm.seconds--;
+              if (tm.seconds === 0) {
+                tm.running = false;
+                clearInterval(tm.intervalId);
+                playBeep();
+                notify(`計時 ${tm.id} 完成：${tm.label}`);
+              }
+            }
+          }, 1000);
+        };
+
+        const toggleTimer = (tIdx) => {
+          const tm = timers[tIdx];
+          if (tm.seconds <= 0) { notify(`請先指派步驟或設定分鐘`); return; }
+          if (tm.running) { tm.running = false; clearInterval(tm.intervalId); }
+          else { runCountdown(tIdx); }
+        };
+
+        const assignTimer = (tIdx, label, mins) => {
+          const tm = timers[tIdx];
+          tm.label = label; tm.seconds = mins * 60; tm.editingMins = false;
+          runCountdown(tIdx);
+          notify(`計時 ${tm.id} 已啟動 (${mins}分)`);
+        };
+
+        const setCustomTimerMins = (tIdx) => {
+          const tm = timers[tIdx];
+          const mins = Math.max(1, Number(tm.customInput) || 1);
+          tm.label = `自訂 ${mins} 分鐘`; tm.seconds = mins * 60; tm.editingMins = false;
+          runCountdown(tIdx);
+          notify(`計時 ${tm.id} 已設為 ${mins} 分鐘`);
+        };
+
+        const resetTimer = (tIdx) => {
+          const tm = timers[tIdx];
+          clearInterval(tm.intervalId);
+          tm.running = false; tm.seconds = 0; tm.label = '';
+        };
+
+        const formatSeconds = (sec) => `${String(Math.floor(sec / 60)).padStart(2, '0')}:${String(sec % 60).padStart(2, '0')}`;
+
+        const suggestedStartTime = computed(() => {
+          if (!state.targetBakeEnd) return '--:--';
+          const [hh, mm] = state.targetBakeEnd.split(':').map(Number);
+          let totalMins = hh * 60 + mm - 240;
+          if (totalMins < 0) totalMins += 1440;
+          return `${String(Math.floor(totalMins / 60)).padStart(2, '0')}:${String(totalMins % 60).padStart(2, '0')}`;
+        });
+
+        // 成本計算
+        const ensurePurchaseItem = (name) => {
+          if (!state.purchases[name]) state.purchases[name] = { grams: 100, price: 0 };
+          return state.purchases[name];
+        };
+
+        const calcItemBatchCost = (item) => {
+          const p = ensurePurchaseItem(item.name);
+          const g = Number(p.grams) || 0;
+          const price = Number(p.price) || 0;
+          if (g <= 0 || price <= 0) return 0;
+          return (item.totalG / g) * price;
+        };
+
+        const autoMoldCount = computed(() => {
+          if (state.calcMode === 'flour') return Math.max(1, Math.round(totalDoughWeight.value / 500));
+          return Math.max(1, totalActiveMolds.value);
+        });
+
+        const effectiveYieldCount = computed(() => {
+          const custom = Number(state.pricing.customYield);
+          return custom > 0 ? custom : autoMoldCount.value;
+        });
+
+        const batchIngredientCost = computed(() => {
+          const sum = computedIngredients.value.reduce((acc, item) => acc + calcItemBatchCost(item), 0);
+          return sum.toFixed(1);
+        });
+
+        const unitTotalCost = computed(() => {
+          const batchTotal = Number(batchIngredientCost.value) + (Number(state.pricing.utilityPerBatch) || 0);
+          return ((batchTotal / effectiveYieldCount.value) + (Number(state.pricing.packagingPerUnit) || 0)).toFixed(1);
+        });
+
+        const suggestedPrice = computed(() => {
+          const margin = Math.min(85, Math.max(5, Number(state.pricing.marginPct) || 50)) / 100;
+          return Math.ceil(Number(unitTotalCost.value) / (1 - margin));
+        });
+
+        const unitProfit = computed(() => (suggestedPrice.value - Number(unitTotalCost.value)).toFixed(1));
+
+        // 實驗筆記
+        const newLog = reactive({ doughTemp: '', env: '28°C/75%', oven: '晶工', note: '' });
+        const addLog = () => {
+          if (!newLog.note.trim()) { notify('請輸入筆記內容'); return; }
+          const d = new Date();
+          const dateStr = `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`;
+          state.logs.unshift({
+            id: 'log-' + Date.now(), date: dateStr, recipeName: currentRecipe.value.name,
+            doughTemp: newLog.doughTemp, env: newLog.env, oven: newLog.oven, note: newLog.note.trim()
+          });
+          newLog.note = '';
+          notify('已儲存筆記');
+        };
+
+        const addIngredient = () => {
+          const newId = 'i-' + Date.now();
+          currentRecipe.value.ingredients.push({ id: newId, name: '新原料', pct: 5, isFlour: false, isLiquid: false, moisturePct: 0 });
+          openIngredientModal(newId);
+        };
+        const removeIngredient = (idx) => currentRecipe.value.ingredients.splice(idx, 1);
+
+        const exportBackup = () => {
+          const d = new Date().toISOString().slice(0, 10);
+          const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url; a.download = `小山PON_${d}.json`; a.click();
+          URL.revokeObjectURL(url);
+          notify('已匯出備份');
+        };
+
+        const importBackup = (e) => {
+          const file = e.target.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            try { Object.assign(state, JSON.parse(ev.target.result)); notify('還原完成'); }
+            catch (err) { notify('檔案格式錯誤'); }
+          };
+          reader.readAsText(file);
+        };
+
+        const tabs = [
+          { id: 'calc', label: '配方', icon: '⚖️' },
+          { id: 'timer', label: '計時', icon: '⏱️' },
+          { id: 'cost', label: '成本', icon: '💰' },
+          { id: 'lab', label: '日誌', icon: '📝' }
+        ];
+
+        return {
+          state, activeTab, tabs, toast, currentRecipe,
+          showCloudModal, cloudStatus, cloudForm, cloudMeta, saveCloudConfig, disconnectCloud, pullFromCloud, pingAndSyncCloud,
+          editingIngredient, ingModalForm, moisturePresets, getItemMoisture,
+          openIngredientModal, setModalType, closeIngredientModal, saveIngredientModal,
+          isEditingRecipeName, editingRecipeName, renameInputRef, confirmDeleteRecipe,
+          createNewRecipe, startRenameRecipe, saveRenameRecipe, duplicateRecipe, handleDeleteRecipe,
+          totalBakerPct, totalActiveMolds, targetFlourWeight, yudaneFlour, yudaneWater, yudaneTotal, yudaneWaterWarning,
+          computedIngredients, totalDoughWeight, hydrationPct,
+          timers, activeRunningTimer, toggleTimer, assignTimer, setCustomTimerMins, resetTimer, formatSeconds, suggestedStartTime,
+          ensurePurchaseItem, calcItemBatchCost, autoMoldCount, batchIngredientCost, unitTotalCost, suggestedPrice, unitProfit,
+          newLog, addLog, addIngredient, removeIngredient, exportBackup, importBackup
+        };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>
