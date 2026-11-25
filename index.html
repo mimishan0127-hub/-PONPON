@@ -194,7 +194,7 @@
         </div>
 
         <p class="text-[11px] text-slate-500 leading-relaxed">
-          填入免費 Supabase 專案資訊，即可跨手機/電腦即時同步配方與日誌，並於開啟時自動執行保活喚醒。
+          已預設填入你的專屬 Supabase 雲端資料庫，開啟網頁時會自動喚醒並同步配方與日誌。
         </p>
 
         <div class="space-y-2.5">
@@ -203,8 +203,8 @@
             <input v-model.trim="cloudForm.url" placeholder="https://xxxx.supabase.co" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-3.5 py-2 text-xs font-medium text-slate-900 focus:outline-none focus:border-amber-500" />
           </div>
           <div>
-            <label class="text-[11px] font-semibold text-slate-500 block mb-1">Anon Public Key</label>
-            <input v-model.trim="cloudForm.key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6..." class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-3.5 py-2 text-xs font-medium text-slate-900 focus:outline-none focus:border-amber-500" />
+            <label class="text-[11px] font-semibold text-slate-500 block mb-1">Publishable Key</label>
+            <input v-model.trim="cloudForm.key" placeholder="sb_publishable_..." class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-3.5 py-2 text-xs font-medium text-slate-900 focus:outline-none focus:border-amber-500" />
           </div>
           <div>
             <label class="text-[11px] font-semibold text-slate-500 block mb-1">同步帳號代碼 (多裝置填相同代碼即可互通)</label>
@@ -220,7 +220,7 @@
         <div class="grid grid-cols-3 gap-2 pt-1">
           <button type="button" @click="disconnectCloud" class="py-2.5 rounded-2xl bg-slate-100 text-slate-600 font-bold text-xs active:scale-95">停用雲端</button>
           <button type="button" @click="pullFromCloud" class="py-2.5 rounded-2xl bg-sky-50 border border-sky-200 text-sky-700 font-bold text-xs active:scale-95">從雲端拉取</button>
-          <button type="submit" class="py-2.5 rounded-2xl bg-gradient-to-r from-slate-800 to-slate-950 text-white font-bold text-xs active:scale-95">儲存並同步</button>
+          <button type="submit" class="py-2.5 rounded-2xl bg-gradient-to-r from-slate-800 to-slate-950 text-white font-bold text-xs active:scale-95">儲存並上傳</button>
         </div>
       </form>
     </div>
@@ -296,7 +296,6 @@
       <!-- ==================== 1. 配方 ==================== -->
       <section v-show="activeTab === 'calc'" class="space-y-3.5">
         
-        <!-- 配方管理與模具控制卡 -->
         <div class="bg-gradient-to-b from-slate-50 to-slate-100/70 border border-slate-200/75 p-3.5 rounded-3xl space-y-3">
           
           <div v-if="!isEditingRecipeName" class="space-y-2">
@@ -407,7 +406,7 @@
           </div>
         </div>
 
-        <!-- 配方投料明細表 (名稱在左對齊、屬性標籤在右) -->
+        <!-- 配方投料明細表 -->
         <div class="bg-white border border-slate-200/80 rounded-3xl overflow-hidden shadow-[0_2px_10px_rgba(15,23,42,0.02)]">
           <div class="px-4 py-3 bg-gradient-to-r from-slate-50 to-slate-100/60 border-b border-slate-100 flex items-center justify-between">
             <div class="flex items-center gap-2">
@@ -425,7 +424,6 @@
               <div class="col-span-2 text-right text-slate-700 whitespace-nowrap">主麵糰</div>
             </div>
             <div v-for="(item, idx) in computedIngredients" :key="item.id" class="grid grid-cols-12 items-center px-3 py-2.5 text-xs">
-              <!-- 名稱在左對齊、屬性標籤在右 -->
               <div @click="openIngredientModal(item.id)" class="col-span-4 pr-1 min-w-0 flex items-center justify-between gap-1 cursor-pointer group">
                 <span class="font-bold text-slate-800 group-hover:text-amber-700 truncate">{{ item.name }}</span>
                 <span class="px-1.5 py-0.5 rounded-md text-[9px] font-extrabold shrink-0 whitespace-nowrap tabular-nums border transition" :class="item.isFlour ? 'bg-amber-50 text-amber-800 border-amber-200/80' : (getItemMoisture(item) > 0 ? 'bg-sky-50 text-sky-700 border-sky-200/80' : 'bg-slate-100 text-slate-500 border-slate-200/60')">
@@ -628,6 +626,12 @@
       setup() {
         const STORAGE_KEY = 'artisan_bread_lab_v1';
         const CLOUD_CFG_KEY = 'pon_bakery_cloud_cfg_v1';
+        const DEFAULT_CLOUD = {
+          url: 'https://rmwkzmohwydjqrwrvmid.supabase.co',
+          key: 'sb_publishable_tRwTx61NXZ7PzVnVGtMY7Q_DGS821nW',
+          syncId: 'pon_bakery_01'
+        };
+
         const activeTab = ref('calc');
         const toast = reactive({ show: false, msg: '' });
         let toastTimer = null;
@@ -740,21 +744,27 @@
 
         // Supabase 雲端同步與自動保活
         const showCloudModal = ref(false);
-        const cloudStatus = ref('offline'); // 'offline' | 'syncing' | 'connected'
-        const cloudForm = reactive({ url: '', key: '', syncId: 'pon_bakery_01' });
+        const cloudStatus = ref('offline');
+        const cloudForm = reactive({ ...DEFAULT_CLOUD });
         const cloudMeta = reactive({ lastPing: '', lastPingTs: 0 });
         let supabaseClient = null;
         let cloudSyncDebounce = null;
         let isApplyingRemote = false;
 
+        const cleanSupabaseUrl = (raw) => (raw || '').trim().replace(/\/rest\/v1\/*$/i, '').replace(/\/+$/, '');
+
         const initSupabaseClient = () => {
-          if (!cloudForm.url || !cloudForm.key || !window.supabase) {
+          const cleanUrl = cleanSupabaseUrl(cloudForm.url);
+          const cleanKey = (cloudForm.key || '').trim();
+          cloudForm.url = cleanUrl;
+          cloudForm.key = cleanKey;
+          if (!cleanUrl || !cleanKey || !window.supabase) {
             supabaseClient = null;
             cloudStatus.value = 'offline';
             return false;
           }
           try {
-            supabaseClient = window.supabase.createClient(cloudForm.url, cloudForm.key);
+            supabaseClient = window.supabase.createClient(cleanUrl, cleanKey);
             return true;
           } catch (e) {
             supabaseClient = null;
@@ -784,12 +794,12 @@
             if (!silent) notify('雲端同步與喚醒成功');
           } catch (e) {
             cloudStatus.value = 'offline';
-            if (!silent) notify('雲端連線失敗，請檢查設定');
+            if (!silent) notify('雲端連線失敗，請檢查資料表是否已建立');
           }
         };
 
-        const pullFromCloud = async () => {
-          if (!supabaseClient) { notify('請先填寫連線資訊'); return; }
+        const pullFromCloud = async (silent = false) => {
+          if (!supabaseClient) { if (!silent) notify('請先填寫連線資訊'); return; }
           cloudStatus.value = 'syncing';
           try {
             const { data, error } = await supabaseClient
@@ -801,10 +811,10 @@
             if (data && data.payload) {
               isApplyingRemote = true;
               Object.assign(state, data.payload);
-              setTimeout(() => { isApplyingRemote = false; }, 300);
-              notify('已從雲端還原最新資料');
+              setTimeout(() => { isApplyingRemote = false; }, 350);
+              if (!silent) notify('已從雲端同步最新資料');
             } else {
-              await pushToCloud(false);
+              await pushToCloud(true);
             }
             cloudStatus.value = 'connected';
             cloudMeta.lastPing = formatNowStr();
@@ -812,7 +822,7 @@
             localStorage.setItem(CLOUD_CFG_KEY, JSON.stringify({ ...cloudForm, ...cloudMeta }));
           } catch (e) {
             cloudStatus.value = 'offline';
-            notify('拉取失敗，請確認資料表已建立');
+            if (!silent) notify('雲端連線失敗，請確認建表 SQL 已執行');
           }
         };
 
@@ -833,15 +843,12 @@
             if (manual) notify('資料庫喚醒正常 (已重設7天計時)');
           } catch (e) {
             cloudStatus.value = 'offline';
-            if (manual) notify('喚醒失敗，請檢查網址與金鑰');
+            if (manual) notify('喚醒失敗，請檢查資料表 bakery_sync');
           }
         };
 
         const saveCloudConfig = async () => {
-          if (!cloudForm.url || !cloudForm.key) {
-            notify('請輸入 URL 與 Key');
-            return;
-          }
+          if (!cloudForm.url || !cloudForm.key) { notify('請輸入 URL 與 Key'); return; }
           if (initSupabaseClient()) {
             await pushToCloud(false);
             showCloudModal.value = false;
@@ -851,7 +858,7 @@
         const disconnectCloud = () => {
           cloudForm.url = ''; cloudForm.key = '';
           supabaseClient = null; cloudStatus.value = 'offline';
-          localStorage.removeItem(CLOUD_CFG_KEY);
+          localStorage.setItem(CLOUD_CFG_KEY, JSON.stringify({ disabled: true }));
           showCloudModal.value = false;
           notify('已切換回純本機離線模式');
         };
@@ -865,9 +872,11 @@
         };
 
         onMounted(() => {
+          let hasLocalSave = false;
           try {
             const saved = localStorage.getItem(STORAGE_KEY);
             if (saved) {
+              hasLocalSave = true;
               const parsed = JSON.parse(saved);
               if (parsed.molds) {
                 parsed.molds = parsed.molds.map((m, i) => ({
@@ -878,9 +887,7 @@
               if (parsed.recipes) {
                 parsed.recipes.forEach(r => {
                   (r.ingredients || []).forEach(ing => {
-                    if (typeof ing.moisturePct !== 'number') {
-                      ing.moisturePct = getItemMoisture(ing);
-                    }
+                    if (typeof ing.moisturePct !== 'number') ing.moisturePct = getItemMoisture(ing);
                   });
                 });
               }
@@ -900,12 +907,18 @@
             const savedCloud = localStorage.getItem(CLOUD_CFG_KEY);
             if (savedCloud) {
               const cfg = JSON.parse(savedCloud);
-              Object.assign(cloudForm, { url: cfg.url || '', key: cfg.key || '', syncId: cfg.syncId || 'pon_bakery_01' });
+              if (cfg.disabled) return;
+              Object.assign(cloudForm, {
+                url: cfg.url || DEFAULT_CLOUD.url,
+                key: cfg.key || DEFAULT_CLOUD.key,
+                syncId: cfg.syncId || DEFAULT_CLOUD.syncId
+              });
               cloudMeta.lastPing = cfg.lastPing || '';
               cloudMeta.lastPingTs = cfg.lastPingTs || 0;
-              if (initSupabaseClient()) {
-                pingAndSyncCloud(false);
-              }
+            }
+            if (initSupabaseClient()) {
+              if (!hasLocalSave) pullFromCloud(true);
+              else pingAndSyncCloud(false);
             }
           } catch (e) {}
         });
@@ -949,29 +962,19 @@
           ingModalForm.name = target.name;
           const m = getItemMoisture(target);
           if (target.isFlour) {
-            ingModalForm.type = 'flour';
-            ingModalForm.moisturePct = 0;
-            ingModalForm.isWater = false;
+            ingModalForm.type = 'flour'; ingModalForm.moisturePct = 0; ingModalForm.isWater = false;
           } else if (target.isLiquid || m > 0) {
-            ingModalForm.type = 'wet';
-            ingModalForm.moisturePct = m > 0 ? m : 87;
+            ingModalForm.type = 'wet'; ingModalForm.moisturePct = m > 0 ? m : 87;
             ingModalForm.isWater = Boolean(target.isWater || target.name === '水' || target.name === '冰水');
           } else {
-            ingModalForm.type = 'dry';
-            ingModalForm.moisturePct = 0;
-            ingModalForm.isWater = false;
+            ingModalForm.type = 'dry'; ingModalForm.moisturePct = 0; ingModalForm.isWater = false;
           }
         };
 
         const setModalType = (newType) => {
           ingModalForm.type = newType;
-          if (newType === 'wet' && (!ingModalForm.moisturePct || ingModalForm.moisturePct <= 0)) {
-            ingModalForm.moisturePct = 87;
-          }
-          if (newType !== 'wet') {
-            ingModalForm.moisturePct = 0;
-            ingModalForm.isWater = false;
-          }
+          if (newType === 'wet' && (!ingModalForm.moisturePct || ingModalForm.moisturePct <= 0)) ingModalForm.moisturePct = 87;
+          if (newType !== 'wet') { ingModalForm.moisturePct = 0; ingModalForm.isWater = false; }
         };
 
         const closeIngredientModal = () => { editingIngredientId.value = null; };
