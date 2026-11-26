@@ -160,7 +160,6 @@
           </svg>
         </div>
         <h1 class="text-[13px] font-extrabold tracking-tight text-slate-900 whitespace-nowrap">小山PON</h1>
-        <!-- 30分鐘防休眠常亮狀態膠囊 (點擊可重新延長30分鐘) -->
         <button @click="resetWakeLock30m(true)" class="px-1.5 py-0.5 rounded-full text-[9px] font-bold border transition tabular-nums whitespace-nowrap flex items-center gap-0.5 active:scale-95" :class="wakeRemainingMins > 0 ? 'bg-amber-50/90 text-amber-700 border-amber-200/80' : 'bg-slate-50 text-slate-400 border-slate-200/70'" title="點擊重置 30 分鐘螢幕常亮">
           <span>{{ wakeRemainingMins > 0 ? `☀️${wakeRemainingMins}m` : '💤休眠' }}</span>
         </button>
@@ -299,7 +298,6 @@
           </label>
         </div>
 
-        <!-- 後下油脂色彩區隔開關 -->
         <label class="flex items-center justify-between bg-violet-50/80 border border-violet-200/80 px-3.5 py-2.5 rounded-2xl text-xs font-bold text-violet-950 cursor-pointer">
           <span>🧈 標示為後下油脂（紫色區隔顯示）</span>
           <input type="checkbox" v-model="ingModalForm.isStage2" class="w-4 h-4 accent-violet-600 rounded" />
@@ -434,7 +432,7 @@
           </div>
         </div>
 
-        <!-- 配方投料明細表 (純淨色彩區分後下油脂，無多餘文字標籤) -->
+        <!-- 配方投料明細表 (移除重複的燙種欄位，保留寬敞的品項、烘焙%、總重與主麵糰) -->
         <div class="bg-white border border-slate-200/80 rounded-3xl overflow-hidden shadow-[0_2px_10px_rgba(15,23,42,0.02)]">
           <div class="px-3.5 py-2 bg-gradient-to-r from-slate-50 to-slate-100/60 border-b border-slate-100 flex items-center justify-between gap-1.5">
             <div class="flex items-center gap-1.5 min-w-0">
@@ -449,20 +447,19 @@
             </div>
           </div>
           <div class="divide-y divide-slate-100">
-            <div class="grid grid-cols-12 px-3 py-1.5 text-[9px] font-bold text-slate-400 bg-slate-50/40">
-              <div class="col-span-4 whitespace-nowrap">品項 / 屬性</div>
+            <div class="grid grid-cols-12 px-3.5 py-1.5 text-[9px] font-bold text-slate-400 bg-slate-50/40">
+              <div class="col-span-5 whitespace-nowrap">品項 / 屬性</div>
               <div class="col-span-2 text-center whitespace-nowrap">烘焙%</div>
               <div class="col-span-2 text-right whitespace-nowrap">總重</div>
-              <div class="col-span-2 text-right text-amber-600 whitespace-nowrap">燙種</div>
-              <div class="col-span-2 text-right text-slate-700 whitespace-nowrap">主麵糰</div>
+              <div class="col-span-3 text-right text-slate-700 whitespace-nowrap pr-4">主麵糰</div>
             </div>
             <div
               v-for="(item, idx) in computedIngredients"
               :key="item.id"
-              class="grid grid-cols-12 items-center px-3 py-1.5 text-[11px] transition-colors"
+              class="grid grid-cols-12 items-center px-3.5 py-2 text-[11px] transition-colors"
               :class="isStage2Item(item) ? 'bg-gradient-to-r from-violet-50/90 via-purple-50/65 to-violet-50/90' : ''"
             >
-              <div @click="openEditIngredientModal(item.id)" class="col-span-4 pr-1 min-w-0 flex items-center justify-between gap-1 cursor-pointer group">
+              <div @click="openEditIngredientModal(item.id)" class="col-span-5 pr-1.5 min-w-0 flex items-center justify-between gap-1 cursor-pointer group">
                 <span class="truncate" :class="isStage2Item(item) ? 'text-violet-900 font-bold' : 'font-semibold text-slate-800 group-hover:text-amber-700'">{{ item.name }}</span>
                 <span class="px-1 py-0.2 rounded text-[8px] font-extrabold shrink-0 whitespace-nowrap tabular-nums border transition" :class="item.isFlour ? 'bg-amber-50 text-amber-800 border-amber-200/80' : (getItemMoisture(item) > 0 ? 'bg-sky-50 text-sky-700 border-sky-200/80' : 'bg-slate-100 text-slate-500 border-slate-200/60')">
                   {{ item.isFlour ? '粉' : (getItemMoisture(item) > 0 ? `濕${getItemMoisture(item)}%` : '料') }}
@@ -475,15 +472,14 @@
                   min="0"
                   :value="currentRecipe.ingredients[idx].pct"
                   @input="updateIngredientPct(idx, $event.target.value)"
-                  class="w-full max-w-[48px] text-center rounded-lg py-0.5 px-0.5 font-bold tabular-nums border border-transparent focus:outline-none"
+                  class="w-full max-w-[50px] text-center rounded-lg py-0.5 px-0.5 font-bold tabular-nums border border-transparent focus:outline-none"
                   :class="isStage2Item(item) ? 'bg-white/95 text-violet-900 border-violet-200/80 focus:border-violet-400' : 'bg-slate-100 text-slate-700 focus:bg-amber-50 focus:border-amber-300'"
                 />
               </div>
               <div class="col-span-2 text-right font-bold tabular-nums whitespace-nowrap" :class="isStage2Item(item) ? 'text-violet-950' : 'text-slate-900'">{{ formatWeight(item.totalG) }}g</div>
-              <div class="col-span-2 text-right font-semibold text-amber-600 tabular-nums whitespace-nowrap">{{ item.yudaneG > 0 ? formatWeight(item.yudaneG) + 'g' : '—' }}</div>
-              <div class="col-span-2 text-right font-extrabold tabular-nums whitespace-nowrap flex items-center justify-end gap-0.5" :class="isStage2Item(item) ? 'text-violet-900' : 'text-slate-900'">
+              <div class="col-span-3 text-right font-extrabold tabular-nums whitespace-nowrap flex items-center justify-end gap-1" :class="isStage2Item(item) ? 'text-violet-900' : 'text-slate-900'">
                 <span>{{ formatWeight(item.mainG) }}g</span>
-                <button v-if="currentRecipe.ingredients.length > 2" @click="removeIngredient(idx)" class="w-3.5 h-3.5 flex items-center justify-center rounded-full text-slate-300 hover:text-rose-500 hover:bg-rose-50 text-[9px] shrink-0">✕</button>
+                <button v-if="currentRecipe.ingredients.length > 2" @click="removeIngredient(idx)" class="w-4 h-4 flex items-center justify-center rounded-full text-slate-300 hover:text-rose-500 hover:bg-rose-50 text-[9px] shrink-0">✕</button>
               </div>
             </div>
           </div>
@@ -1039,7 +1035,6 @@
         };
 
         onMounted(() => {
-          // 啟動 30 分鐘防休眠倒數
           resetWakeLock30m(false);
           document.addEventListener('visibilitychange', handleVisibilityChange);
           wakeCheckInterval = setInterval(() => {
@@ -1379,7 +1374,6 @@
           const tm = timers[tIdx];
           clearInterval(tm.intervalId);
           tm.running = true;
-          // 啟動計時器時若常亮剩餘時間不足，自動確保螢幕常亮
           if (Date.now() > wakeExpireAt) resetWakeLock30m(false);
           else acquireSystemWakeLock();
 
