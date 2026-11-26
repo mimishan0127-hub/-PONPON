@@ -29,15 +29,12 @@
       user-select: auto;
       font-size: 16px !important;
     }
-    .compact-field {
-      transform: scale(0.84);
-      transform-origin: center;
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
     }
-    .compact-select {
-      transform: scale(0.88);
-      transform-origin: left center;
-      width: 113.6%;
-    }
+    input[type="number"] { -moz-appearance: textfield; }
     .tabular-nums { font-variant-numeric: tabular-nums; }
     .safe-top { padding-top: max(0.75rem, env(safe-area-inset-top)); }
     .safe-bottom { padding-bottom: max(0.5rem, env(safe-area-inset-bottom)); }
@@ -147,7 +144,7 @@
     <!-- 頂部極簡列 -->
     <header class="bg-white/95 backdrop-blur-md border-b border-slate-100 px-3.5 pb-2.5 safe-top flex items-center justify-between gap-1.5 shrink-0 z-20">
       <div class="flex items-center gap-2 min-w-0">
-        <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-100 via-orange-100 to-amber-200 border border-amber-200/80 flex items-center justify-center shrink-0">
+        <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-100 via-orange-100 to-amber-200 border border-amber-200/80 flex items-center justify-center shrink-0 shadow-2xs">
           <svg class="w-5 h-5" viewBox="0 0 32 32" fill="none">
             <path d="M7 14.5C4.5 13.8 4.8 9 9.5 8.5H22.5C27.2 9 27.5 13.8 25 14.5V23.5C25 25.2 23.6 26.5 22 26.5H10C8.4 26.5 7 25.2 7 23.5V14.5Z" fill="url(#breadGrad)"/>
             <path d="M9.5 14C7.8 13.5 8 10.8 11 10.5H21C24 10.8 24.2 13.5 22.5 14V22.8C22.5 23.7 21.8 24.5 20.8 24.5H11.2C10.2 24.5 9.5 23.7 9.5 22.8V14Z" fill="#FFFDF9"/>
@@ -203,7 +200,7 @@
         </div>
 
         <p class="text-[11px] text-slate-500 leading-relaxed">
-          填入你的 Supabase 網址與金鑰（建議使用 Legacy anon eyJ... 金鑰），開啟網頁時會自動喚醒並同步配方與日誌。
+          填入你的 Supabase 網址與金鑰（支援 Legacy anon eyJ... 或 sb_publishable_），開啟網頁時會自動比對時間戳並雙向同步。
         </p>
 
         <div class="space-y-2.5">
@@ -228,7 +225,7 @@
 
         <div class="grid grid-cols-3 gap-2 pt-1">
           <button type="button" @click="disconnectCloud" class="py-2.5 rounded-2xl bg-slate-100 text-slate-600 font-bold text-xs active:scale-95">停用雲端</button>
-          <button type="button" @click="pullFromCloud" class="py-2.5 rounded-2xl bg-sky-50 border border-sky-200 text-sky-700 font-bold text-xs active:scale-95">從雲端拉取</button>
+          <button type="button" @click="pullFromCloud(false)" class="py-2.5 rounded-2xl bg-sky-50 border border-sky-200 text-sky-700 font-bold text-xs active:scale-95">從雲端拉取</button>
           <button type="submit" class="py-2.5 rounded-2xl bg-gradient-to-r from-slate-800 to-slate-950 text-white font-bold text-xs active:scale-95">儲存並上傳</button>
         </div>
       </form>
@@ -308,11 +305,9 @@
         <div class="bg-gradient-to-b from-slate-50 to-slate-100/70 border border-slate-200/75 p-3 rounded-3xl space-y-2.5">
           
           <div v-if="!isEditingRecipeName" class="space-y-1.5">
-            <div class="overflow-hidden rounded-xl bg-white border border-slate-200">
-              <select v-model="state.selectedRecipeId" @change="confirmDeleteRecipe = false" class="compact-select bg-transparent px-3 py-1.5 font-bold text-slate-900 focus:outline-none">
-                <option v-for="r in state.recipes" :key="r.id" :value="r.id">{{ r.name }}</option>
-              </select>
-            </div>
+            <select v-model="state.selectedRecipeId" @change="confirmDeleteRecipe = false" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-[13px] font-bold text-slate-900 focus:outline-none focus:border-amber-500">
+              <option v-for="r in state.recipes" :key="r.id" :value="r.id">{{ r.name }}</option>
+            </select>
             <div class="grid grid-cols-4 gap-1.5">
               <button @click="createNewRecipe" class="py-1 bg-white border border-slate-200 text-slate-700 font-semibold text-[11px] rounded-xl active:scale-95 whitespace-nowrap">＋新增</button>
               <button @click="startRenameRecipe" class="py-1 bg-white border border-slate-200 text-slate-700 font-semibold text-[11px] rounded-xl active:scale-95 whitespace-nowrap">✏️改名</button>
@@ -357,12 +352,12 @@
           </div>
 
           <!-- 模式 B：依總麵糰重回推 -->
-          <div v-else class="flex items-center justify-between bg-white border border-slate-200/70 px-3 py-1.5 rounded-xl">
-            <div>
+          <div v-else class="flex items-center justify-between bg-white border border-slate-200/70 px-3 py-1.5 rounded-xl gap-2">
+            <div class="min-w-0">
               <div class="text-[11px] font-bold text-slate-700 whitespace-nowrap">目標總麵糰重 (g)</div>
-              <div class="text-[9px] text-slate-400 whitespace-nowrap">自動依 {{ totalBakerPct }}% 回推高粉與配料</div>
+              <div class="text-[9px] text-slate-400 truncate">自動依 {{ totalBakerPct }}% 回推高粉與配料</div>
             </div>
-            <input type="number" v-model.number="state.customDough" min="50" step="10" class="compact-field w-24 text-right font-extrabold bg-slate-50 border border-slate-200 rounded-lg px-2 py-0.5 tabular-nums text-slate-900" />
+            <input type="number" v-model.number="state.customDough" min="50" step="10" class="w-20 text-right font-extrabold bg-slate-50 border border-slate-200 rounded-lg px-2 py-0.5 tabular-nums text-slate-900 shrink-0" />
           </div>
 
           <div class="flex items-center justify-between gap-2 text-[11px]">
@@ -372,7 +367,7 @@
             </label>
             <div class="flex items-center gap-1 text-slate-600 font-medium whitespace-nowrap">
               <span>燙種比例</span>
-              <input type="number" v-model.number="currentRecipe.yudanePct" min="0" max="50" class="compact-field w-14 text-center font-bold bg-white border border-slate-200 rounded-lg py-0.5 tabular-nums text-slate-900" />
+              <input type="number" v-model.number="currentRecipe.yudanePct" min="0" max="50" class="w-12 text-center font-bold bg-white border border-slate-200 rounded-lg py-0.5 tabular-nums text-slate-900" />
               <span>%</span>
             </div>
           </div>
@@ -382,15 +377,54 @@
         <div class="grid grid-cols-3 gap-2">
           <div class="bg-gradient-to-br from-slate-50 via-white to-slate-100/90 border border-slate-200/75 py-2 px-2 rounded-2xl text-center">
             <div class="text-[10px] font-medium text-slate-400 whitespace-nowrap">麵團總重</div>
-            <div class="text-sm font-extrabold text-slate-900 mt-0.5 tabular-nums whitespace-nowrap">{{ totalDoughWeight }}g</div>
+            <div class="text-sm font-extrabold text-slate-900 mt-0.5 tabular-nums whitespace-nowrap">{{ formatWeight(totalDoughWeight) }}g</div>
           </div>
           <div class="bg-gradient-to-br from-amber-50/90 via-orange-50/50 to-amber-100/60 border border-amber-200/70 py-2 px-2 rounded-2xl text-center">
             <div class="text-[10px] font-medium text-amber-700/80 whitespace-nowrap">高粉總重</div>
-            <div class="text-sm font-extrabold text-amber-600 mt-0.5 tabular-nums whitespace-nowrap">{{ targetFlourWeight }}g</div>
+            <div class="text-sm font-extrabold text-amber-600 mt-0.5 tabular-nums whitespace-nowrap">{{ formatWeight(targetFlourWeight) }}g</div>
           </div>
           <div class="bg-gradient-to-br from-sky-50/80 via-white to-cyan-50/70 border border-sky-200/60 py-2 px-2 rounded-2xl text-center">
             <div class="text-[10px] font-medium text-sky-700/75 whitespace-nowrap">有效含水率</div>
             <div class="text-sm font-extrabold text-sky-700 mt-0.5 tabular-nums whitespace-nowrap">{{ hydrationPct }}%</div>
+          </div>
+        </div>
+
+        <!-- 新手神器：DDT 理想終溫「打麵水溫計算機」(可收合) -->
+        <div class="bg-gradient-to-r from-sky-50/70 via-white to-indigo-50/50 border border-sky-200/70 rounded-2xl overflow-hidden">
+          <button @click="showDdtCalc = !showDdtCalc" class="w-full px-3.5 py-2 flex items-center justify-between text-[11px]">
+            <div class="flex items-center gap-1.5">
+              <span>🌡️</span>
+              <span class="font-bold text-sky-950 whitespace-nowrap">打麵水溫精算 (控溫 24–26°C)</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="font-extrabold text-sky-700 tabular-nums whitespace-nowrap">建議水溫 {{ recommendedWaterTemp }}°C</span>
+              <span class="text-slate-400 text-[10px]">{{ showDdtCalc ? '▲' : '▼' }}</span>
+            </div>
+          </button>
+          <div v-if="showDdtCalc" class="px-3.5 pb-3 pt-1 border-t border-sky-100/80 space-y-2">
+            <div class="grid grid-cols-4 gap-1.5 text-center">
+              <div>
+                <label class="text-[9px] text-slate-500 block">目標終溫</label>
+                <input type="number" v-model.number="ddt.target" class="w-full bg-white border border-sky-200 rounded-lg py-0.5 text-center font-bold tabular-nums" />
+              </div>
+              <div>
+                <label class="text-[9px] text-slate-500 block">目前室溫</label>
+                <input type="number" v-model.number="ddt.room" class="w-full bg-white border border-sky-200 rounded-lg py-0.5 text-center font-bold tabular-nums" />
+              </div>
+              <div>
+                <label class="text-[9px] text-slate-500 block">麵粉溫度</label>
+                <input type="number" v-model.number="ddt.flour" class="w-full bg-white border border-sky-200 rounded-lg py-0.5 text-center font-bold tabular-nums" />
+              </div>
+              <div>
+                <label class="text-[9px] text-slate-500 block">攪拌升溫</label>
+                <input type="number" v-model.number="ddt.friction" class="w-full bg-white border border-sky-200 rounded-lg py-0.5 text-center font-bold tabular-nums" />
+              </div>
+            </div>
+            <div class="text-[10px] text-sky-800 bg-white/80 rounded-xl px-2.5 py-1.5 flex items-center justify-between">
+              <span v-if="recommendedWaterTemp <= 4">🧊 需冰水降溫！建議將主麵糰液體替換約 <b>{{ Math.round(mainLiquidTotalG * 0.25) }}g</b> 碎冰塊</span>
+              <span v-else-if="recommendedWaterTemp <= 15">❄️ 建議使用冰箱冷藏冰水與冰牛奶（約 {{ recommendedWaterTemp }}°C）</span>
+              <span v-else>💧 使用常溫或微涼水（約 {{ recommendedWaterTemp }}°C）即可</span>
+            </div>
           </div>
         </div>
 
@@ -402,17 +436,17 @@
               <span class="text-[11px] font-extrabold text-amber-950 whitespace-nowrap">Day 1 前置燙種 (粉水比 1 : {{ currentRecipe.yudaneWaterRatio }})</span>
             </div>
             <span class="text-[10px] font-bold text-amber-700 bg-white/90 px-2 py-0.5 rounded-full border border-amber-200/70 tabular-nums whitespace-nowrap">
-              共 {{ yudaneTotal }}g
+              共 {{ formatWeight(yudaneTotal) }}g
             </span>
           </div>
           <div class="grid grid-cols-2 gap-2">
             <div class="bg-gradient-to-b from-white to-amber-50/40 border border-amber-200/60 rounded-xl px-2.5 py-2">
               <div class="text-[10px] font-medium text-slate-500 whitespace-nowrap">高筋麵粉 ({{ currentRecipe.yudanePct }}%)</div>
-              <div class="text-sm font-extrabold text-slate-900 mt-0.5 tabular-nums whitespace-nowrap">{{ yudaneFlour }} <span class="text-[10px] font-semibold text-slate-400">g</span></div>
+              <div class="text-sm font-extrabold text-slate-900 mt-0.5 tabular-nums whitespace-nowrap">{{ formatWeight(yudaneFlour) }} <span class="text-[10px] font-semibold text-slate-400">g</span></div>
             </div>
             <div class="bg-gradient-to-b from-white to-amber-50/40 border border-amber-200/60 rounded-xl px-2.5 py-2">
               <div class="text-[10px] font-medium text-slate-500 whitespace-nowrap">100°C 沸水 (×{{ currentRecipe.yudaneWaterRatio }})</div>
-              <div class="text-sm font-extrabold text-amber-600 mt-0.5 tabular-nums whitespace-nowrap">{{ yudaneWater }} <span class="text-[10px] font-semibold text-amber-400">g</span></div>
+              <div class="text-sm font-extrabold text-amber-600 mt-0.5 tabular-nums whitespace-nowrap">{{ formatWeight(yudaneWater) }} <span class="text-[10px] font-semibold text-amber-400">g</span></div>
             </div>
           </div>
           <div v-if="yudaneWaterWarning" class="text-[10px] font-bold text-rose-600 bg-rose-50 border border-rose-200/80 px-2.5 py-1 rounded-xl">
@@ -423,14 +457,19 @@
           </div>
         </div>
 
-        <!-- 配方投料明細表 (直接雙向綁定原始配方陣列，即時連動重算) -->
+        <!-- 配方投料明細表 (支援 0.1g 精準模式切換) -->
         <div class="bg-white border border-slate-200/80 rounded-3xl overflow-hidden shadow-[0_2px_10px_rgba(15,23,42,0.02)]">
-          <div class="px-3.5 py-2.5 bg-gradient-to-r from-slate-50 to-slate-100/60 border-b border-slate-100 flex items-center justify-between">
-            <div class="flex items-center gap-1.5">
-              <span class="text-[11px] font-bold text-slate-900 whitespace-nowrap">配方投料明細</span>
-              <span class="text-[9px] font-semibold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded tabular-nums whitespace-nowrap">合計 {{ totalBakerPct }}%</span>
+          <div class="px-3.5 py-2.5 bg-gradient-to-r from-slate-50 to-slate-100/60 border-b border-slate-100 flex items-center justify-between gap-1.5">
+            <div class="flex items-center gap-1.5 min-w-0">
+              <span class="text-[11px] font-bold text-slate-900 whitespace-nowrap">投料明細</span>
+              <span class="text-[9px] font-semibold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded tabular-nums whitespace-nowrap">{{ totalBakerPct }}%</span>
             </div>
-            <button @click="addIngredient" class="text-[11px] font-bold text-amber-600 active:opacity-70 whitespace-nowrap">＋新增原料</button>
+            <div class="flex items-center gap-1.5 shrink-0">
+              <button @click="state.precisionMode = !state.precisionMode" class="px-2 py-0.5 rounded-full text-[10px] font-bold border transition whitespace-nowrap" :class="state.precisionMode ? 'bg-sky-50 text-sky-700 border-sky-200' : 'bg-white text-slate-500 border-slate-200'">
+                {{ state.precisionMode ? '0.1g精準' : '整數g' }}
+              </button>
+              <button @click="addIngredient" class="text-[11px] font-bold text-amber-600 active:opacity-70 whitespace-nowrap">＋新增</button>
+            </div>
           </div>
           <div class="divide-y divide-slate-100">
             <div class="grid grid-cols-12 px-3 py-1.5 text-[9px] font-bold text-slate-400 bg-slate-50/40">
@@ -447,20 +486,20 @@
                   {{ item.isFlour ? '粉' : (getItemMoisture(item) > 0 ? `濕${getItemMoisture(item)}%` : '料') }}
                 </span>
               </div>
-              <div class="col-span-2 flex justify-center">
+              <div class="col-span-2 flex justify-center px-0.5">
                 <input
                   type="number"
                   step="0.1"
                   min="0"
                   :value="currentRecipe.ingredients[idx].pct"
                   @input="updateIngredientPct(idx, $event.target.value)"
-                  class="compact-field w-14 text-center bg-slate-100 focus:bg-amber-50 border border-transparent focus:border-amber-300 rounded-lg py-0.5 px-0.5 font-bold text-slate-700 tabular-nums tracking-tight"
+                  class="w-full max-w-[48px] text-center bg-slate-100 focus:bg-amber-50 border border-transparent focus:border-amber-300 rounded-lg py-0.5 px-0.5 font-bold text-slate-700 tabular-nums"
                 />
               </div>
-              <div class="col-span-2 text-right font-bold text-slate-900 tabular-nums whitespace-nowrap">{{ item.totalG }}g</div>
-              <div class="col-span-2 text-right font-semibold text-amber-600 tabular-nums whitespace-nowrap">{{ item.yudaneG > 0 ? item.yudaneG + 'g' : '—' }}</div>
+              <div class="col-span-2 text-right font-bold text-slate-900 tabular-nums whitespace-nowrap">{{ formatWeight(item.totalG) }}g</div>
+              <div class="col-span-2 text-right font-semibold text-amber-600 tabular-nums whitespace-nowrap">{{ item.yudaneG > 0 ? formatWeight(item.yudaneG) + 'g' : '—' }}</div>
               <div class="col-span-2 text-right font-extrabold text-slate-900 tabular-nums whitespace-nowrap flex items-center justify-end gap-0.5">
-                <span>{{ item.mainG }}g</span>
+                <span>{{ formatWeight(item.mainG) }}g</span>
                 <button v-if="currentRecipe.ingredients.length > 2" @click="removeIngredient(idx)" class="w-3.5 h-3.5 flex items-center justify-center rounded-full text-slate-300 hover:text-rose-500 hover:bg-rose-50 text-[9px] shrink-0">✕</button>
               </div>
             </div>
@@ -590,7 +629,7 @@
               <div class="col-span-4 min-w-0">
                 <div class="font-bold text-slate-800 truncate">{{ item.name }}</div>
                 <div class="text-[10px] text-slate-400 tabular-nums whitespace-nowrap">
-                  用{{ item.totalG }}g · <span class="text-amber-600 font-semibold">${{ calcItemBatchCost(item).toFixed(1) }}</span>
+                  用{{ formatWeight(item.totalG) }}g · <span class="text-amber-600 font-semibold">${{ calcItemBatchCost(item).toFixed(1) }}</span>
                 </div>
               </div>
               <div class="col-span-4 flex justify-center">
@@ -604,7 +643,7 @@
         </div>
       </section>
 
-      <!-- ==================== 4. 日誌 ==================== -->
+      <!-- ==================== 4. 日誌 & 新手診斷 ==================== -->
       <section v-show="activeTab === 'lab'" class="space-y-3.5">
         <form @submit.prevent="addLog" class="bg-gradient-to-b from-slate-50 to-slate-100/70 border border-slate-200/75 p-4 rounded-3xl space-y-3">
           <div class="grid grid-cols-3 gap-2">
@@ -619,6 +658,20 @@
           <textarea v-model="newLog.note" rows="2" placeholder="記錄組織、滿模度與調整方向..." class="w-full bg-white border border-slate-200 rounded-2xl p-3 text-xs text-slate-900"></textarea>
           <button type="submit" class="w-full py-2.5 bg-gradient-to-r from-slate-800 to-slate-950 text-white font-bold rounded-2xl text-xs active:scale-95 transition whitespace-nowrap">儲存筆記</button>
         </form>
+
+        <!-- 新手吐司異常快速診斷卡 (可折疊) -->
+        <div class="bg-amber-50/60 border border-amber-200/70 rounded-3xl overflow-hidden">
+          <button @click="showDiag = !showDiag" class="w-full px-4 py-2.5 flex items-center justify-between text-xs font-bold text-amber-950">
+            <span>🩺 新手吐司異常排查手冊</span>
+            <span class="text-[10px] text-amber-700">{{ showDiag ? '收合 ▲' : '展開 ▼' }}</span>
+          </button>
+          <div v-if="showDiag" class="px-4 pb-3.5 space-y-2 border-t border-amber-200/50 pt-2.5">
+            <div v-for="(d, i) in diagnostics" :key="i" class="bg-white/90 p-2.5 rounded-2xl border border-amber-200/50">
+              <div class="text-[11px] font-extrabold text-rose-700">⚠️ {{ d.issue }}</div>
+              <div class="text-[11px] text-slate-600 mt-0.5 leading-relaxed">{{ d.fix }}</div>
+            </div>
+          </div>
+        </div>
 
         <div class="space-y-2.5">
           <div v-for="(log, idx) in state.logs" :key="log.id" class="bg-gradient-to-br from-white to-slate-50/80 border border-slate-200/80 p-4 rounded-3xl space-y-1.5">
@@ -648,8 +701,8 @@
 
     createApp({
       setup() {
-        const STORAGE_KEY = 'artisan_bread_lab_v2';
-        const LEGACY_STORAGE_KEY = 'artisan_bread_lab_v1';
+        const STORAGE_KEY = 'artisan_bread_lab_v3';
+        const LEGACY_KEYS = ['artisan_bread_lab_v2', 'artisan_bread_lab_v1'];
         const CLOUD_CFG_KEY = 'pon_bakery_cloud_cfg_v1';
         const DEFAULT_CLOUD = {
           url: 'https://rmwkzmohwydjqrwrvmid.supabase.co',
@@ -658,6 +711,8 @@
         };
 
         const activeTab = ref('calc');
+        const showDdtCalc = ref(false);
+        const showDiag = ref(false);
         const toast = reactive({ show: false, msg: '' });
         let toastTimer = null;
 
@@ -698,6 +753,8 @@
           selectedRecipeId: 'maitian-74-15',
           calcMode: 'mold',
           customDough: 1000,
+          precisionMode: false,
+          lastModified: 0,
           targetBakeEnd: '15:00',
           molds: [
             { id: 'm12', name: '12兩(黑) 2285ml', shortName: '12兩(黑)', baseDough: 500, bakeTime: '30-33', qty: 1 },
@@ -773,6 +830,14 @@
 
         const state = reactive(JSON.parse(JSON.stringify(defaultState)));
 
+        // DDT 理想打麵水溫計算
+        const ddt = reactive({ target: 25, room: 26, flour: 25, friction: 6 });
+        const recommendedWaterTemp = computed(() => {
+          const base = Number(ddt.target) * 3 - Number(ddt.room) - Number(ddt.flour) - Number(ddt.friction);
+          return Math.round(base);
+        });
+
+        // Supabase 雲端同步與時間戳比對
         const showCloudModal = ref(false);
         const cloudStatus = ref('offline');
         const cloudForm = reactive({ ...DEFAULT_CLOUD });
@@ -828,7 +893,7 @@
           }
         };
 
-        const pullFromCloud = async (silent = false) => {
+        const pullFromCloud = async (silent = false, onlyIfNewer = false) => {
           if (!supabaseClient) { if (!silent) notify('請先填寫連線資訊'); return; }
           cloudStatus.value = 'syncing';
           try {
@@ -839,11 +904,15 @@
               .maybeSingle();
             if (error) throw error;
             if (data && data.payload) {
-              isApplyingRemote = true;
-              Object.assign(state, data.payload);
-              setTimeout(() => { isApplyingRemote = false; }, 350);
-              if (!silent) notify('已從雲端同步最新資料');
-            } else {
+              const remoteTs = Number(data.payload.lastModified) || 0;
+              const localTs = Number(state.lastModified) || 0;
+              if (!onlyIfNewer || remoteTs > localTs) {
+                isApplyingRemote = true;
+                Object.assign(state, data.payload);
+                setTimeout(() => { isApplyingRemote = false; }, 350);
+                if (!silent) notify('已從雲端同步最新資料');
+              }
+            } else if (!onlyIfNewer) {
               await pushToCloud(true);
             }
             cloudStatus.value = 'connected';
@@ -857,24 +926,8 @@
         };
 
         const pingAndSyncCloud = async (manual = false) => {
-          if (!supabaseClient) return;
-          cloudStatus.value = 'syncing';
-          try {
-            const { error } = await supabaseClient
-              .from('bakery_sync')
-              .select('id')
-              .eq('id', cloudForm.syncId || 'pon_bakery_01')
-              .maybeSingle();
-            if (error) throw error;
-            cloudStatus.value = 'connected';
-            cloudMeta.lastPing = formatNowStr();
-            cloudMeta.lastPingTs = Date.now();
-            localStorage.setItem(CLOUD_CFG_KEY, JSON.stringify({ ...cloudForm, ...cloudMeta }));
-            if (manual) notify('資料庫喚醒正常 (已重設7天計時)');
-          } catch (e) {
-            cloudStatus.value = 'offline';
-            if (manual) notify('喚醒失敗，請檢查金鑰與資料表權限');
-          }
+          await pullFromCloud(!manual, !manual);
+          if (manual && cloudStatus.value === 'connected') notify('資料庫喚醒正常 (已重設7天計時)');
         };
 
         const saveCloudConfig = async () => {
@@ -901,38 +954,46 @@
           return 0;
         };
 
+        const normalizeLoadedState = (parsed) => {
+          if (parsed.calcMode === 'flour') {
+            parsed.calcMode = 'dough';
+            parsed.customDough = parsed.customDough || 1000;
+          }
+          if (parsed.molds) {
+            parsed.molds = parsed.molds.map((m, i) => ({
+              ...m,
+              shortName: m.shortName || defaultState.molds[i]?.shortName || m.name
+            }));
+          }
+          if (parsed.recipes) {
+            parsed.recipes.forEach(r => {
+              (r.ingredients || []).forEach(ing => {
+                if (typeof ing.moisturePct !== 'number') ing.moisturePct = getItemMoisture(ing);
+                if (ing.name === '無鹽奶油' && ing.moisturePct === 0) {
+                  ing.isLiquid = true;
+                  ing.moisturePct = 15;
+                }
+              });
+            });
+          }
+          parsed.purchases = { ...JSON.parse(JSON.stringify(defaultPurchases)), ...(parsed.purchases || {}) };
+          parsed.pricing = { ...defaultState.pricing, ...(parsed.pricing || {}) };
+          return parsed;
+        };
+
         onMounted(() => {
           let hasLocalSave = false;
           try {
-            const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY);
+            let saved = localStorage.getItem(STORAGE_KEY);
+            if (!saved) {
+              for (const k of LEGACY_KEYS) {
+                const legacy = localStorage.getItem(k);
+                if (legacy) { saved = legacy; break; }
+              }
+            }
             if (saved) {
               hasLocalSave = true;
-              const parsed = JSON.parse(saved);
-              if (parsed.calcMode === 'flour') {
-                parsed.calcMode = 'dough';
-                parsed.customDough = parsed.customDough || 1000;
-              }
-              if (parsed.molds) {
-                parsed.molds = parsed.molds.map((m, i) => ({
-                  ...m,
-                  shortName: m.shortName || defaultState.molds[i]?.shortName || m.name
-                }));
-              }
-              if (parsed.recipes) {
-                parsed.recipes.forEach(r => {
-                  (r.ingredients || []).forEach(ing => {
-                    if (typeof ing.moisturePct !== 'number') ing.moisturePct = getItemMoisture(ing);
-                    if (ing.name === '無鹽奶油' && ing.moisturePct === 0) {
-                      ing.isLiquid = true;
-                      ing.moisturePct = 15;
-                    }
-                  });
-                });
-              }
-              if (!parsed.purchases) {
-                parsed.purchases = JSON.parse(JSON.stringify(defaultPurchases));
-              }
-              Object.assign(state, parsed);
+              Object.assign(state, normalizeLoadedState(JSON.parse(saved)));
             }
           } catch (e) {}
 
@@ -950,13 +1011,15 @@
               cloudMeta.lastPingTs = cfg.lastPingTs || 0;
             }
             if (initSupabaseClient()) {
-              if (!hasLocalSave) pullFromCloud(true);
-              else pingAndSyncCloud(false);
+              pullFromCloud(true, hasLocalSave);
             }
           } catch (e) {}
         });
 
         watch(state, (val) => {
+          if (!isApplyingRemote) {
+            val.lastModified = Date.now();
+          }
           try {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(val));
           } catch (e) {
@@ -1016,8 +1079,14 @@
         const saveIngredientModal = () => {
           const target = editingIngredient.value;
           if (!target) return;
+          const oldName = target.name;
           const trimmedName = ingModalForm.name.trim();
-          if (trimmedName) target.name = trimmedName;
+          if (trimmedName && trimmedName !== oldName) {
+            if (state.purchases[oldName] && !state.purchases[trimmedName]) {
+              state.purchases[trimmedName] = { ...state.purchases[oldName] };
+            }
+            target.name = trimmedName;
+          }
 
           if (ingModalForm.type === 'flour') {
             target.isFlour = true; target.isLiquid = false; target.isWater = false; target.moisturePct = 0;
@@ -1106,7 +1175,13 @@
           }
         };
 
-        // 配方核心計算 (支援依模具 或 依總麵糰重回推)
+        // 配方核心計算 (支援 0.1g 精準模式與整數模式)
+        const formatWeight = (val) => {
+          const num = Number(val) || 0;
+          if (state.precisionMode) return Number(num.toFixed(1));
+          return Math.round(num);
+        };
+
         const totalBakerPct = computed(() => Number(currentRecipe.value.ingredients.reduce((sum, i) => sum + (Number(i.pct) || 0), 0).toFixed(1)));
         const totalActiveMolds = computed(() => state.molds.reduce((sum, m) => sum + (Number(m.qty) || 0), 0));
 
@@ -1118,16 +1193,16 @@
           if (state.calcMode === 'dough') {
             const targetDough = Math.max(0, Number(state.customDough) || 0);
             if (targetDough <= 0) return 0;
-            return Math.round(((targetDough * lossMult) / totalPct) * 100);
+            return ((targetDough * lossMult) / totalPct) * 100;
           }
 
           const rawDough = state.molds.reduce((sum, m) => sum + (m.baseDough * (Number(m.qty) || 0)), 0);
           if (rawDough <= 0) return 0;
-          return Math.round(((rawDough * lossMult) / totalPct) * 100);
+          return ((rawDough * lossMult) / totalPct) * 100;
         });
 
-        const yudaneFlour = computed(() => Math.round(targetFlourWeight.value * ((currentRecipe.value.yudanePct || 0) / 100)));
-        const yudaneWater = computed(() => Math.round(yudaneFlour.value * (currentRecipe.value.yudaneWaterRatio || 1.2)));
+        const yudaneFlour = computed(() => targetFlourWeight.value * ((currentRecipe.value.yudanePct || 0) / 100));
+        const yudaneWater = computed(() => yudaneFlour.value * (currentRecipe.value.yudaneWaterRatio || 1.2));
         const yudaneTotal = computed(() => yudaneFlour.value + yudaneWater.value);
 
         const primaryWaterIndex = computed(() => {
@@ -1141,7 +1216,7 @@
           const flour = targetFlourWeight.value;
           const wIdx = primaryWaterIndex.value;
           return currentRecipe.value.ingredients.map((item, idx) => {
-            const totalG = Math.round((flour * (Number(item.pct) || 0)) / 100);
+            const totalG = (flour * (Number(item.pct) || 0)) / 100;
             let yudaneG = 0;
             if (idx === 0) yudaneG = Math.min(totalG, yudaneFlour.value);
             if (idx === wIdx && yudaneWater.value > 0) yudaneG = Math.min(totalG, yudaneWater.value);
@@ -1150,12 +1225,18 @@
           });
         });
 
+        const mainLiquidTotalG = computed(() => {
+          return computedIngredients.value.reduce((sum, item) => {
+            return getItemMoisture(item) >= 70 ? sum + item.mainG : sum;
+          }, 0);
+        });
+
         const yudaneWaterWarning = computed(() => {
           if ((currentRecipe.value.yudanePct || 0) <= 0 || targetFlourWeight.value <= 0) return false;
           const wIdx = primaryWaterIndex.value;
           if (wIdx === -1) return true;
           const waterTotalG = computedIngredients.value[wIdx]?.totalG || 0;
-          return yudaneWater.value > waterTotalG;
+          return yudaneWater.value > waterTotalG + 0.05;
         });
 
         const totalDoughWeight = computed(() => computedIngredients.value.reduce((s, i) => s + i.totalG, 0));
@@ -1289,7 +1370,13 @@
 
         const unitProfit = computed(() => (suggestedPrice.value - Number(unitTotalCost.value)).toFixed(1));
 
-        // 實驗筆記
+        // 實驗筆記與新手排查
+        const diagnostics = [
+          { issue: '吐司出爐後側邊塌陷（收腰）', fix: '① 出爐未立刻重震模具排熱氣；② 後發過度（超過8.5分滿）；③ 烤焙時間不足中心未定型。' },
+          { issue: '底部出現厚重沉積帶（白邊 / 死麵）', fix: '① 擀捲太緊壓死氣泡；② 下火不足或未放烤箱下層；③ 打麵終溫超過 28°C 導致麵筋斷裂。' },
+          { issue: '表皮顏色過深但內部未熟', fix: '上火過高提早焦化，建議調降上火 10–15°C，或上色滿意後加蓋鋁箔紙續烤。' }
+        ];
+
         const newLog = reactive({ doughTemp: '', env: '28°C/75%', oven: '晶工', note: '' });
         const addLog = () => {
           if (!newLog.note.trim()) { notify('請輸入筆記內容'); return; }
@@ -1325,8 +1412,13 @@
           if (!file) return;
           const reader = new FileReader();
           reader.onload = (ev) => {
-            try { Object.assign(state, JSON.parse(ev.target.result)); notify('還原完成'); }
-            catch (err) { notify('檔案格式錯誤'); }
+            try {
+              const parsed = normalizeLoadedState(JSON.parse(ev.target.result));
+              Object.assign(state, parsed);
+              notify('還原完成');
+            } catch (err) {
+              notify('檔案格式錯誤');
+            }
           };
           reader.readAsText(file);
         };
@@ -1339,17 +1431,17 @@
         ];
 
         return {
-          state, activeTab, tabs, toast, currentRecipe,
+          state, activeTab, tabs, toast, currentRecipe, showDdtCalc, showDiag, ddt, recommendedWaterTemp, mainLiquidTotalG,
           showCloudModal, cloudStatus, cloudForm, cloudMeta, saveCloudConfig, disconnectCloud, pullFromCloud, pingAndSyncCloud,
           editingIngredient, ingModalForm, moisturePresets, getItemMoisture,
           openIngredientModal, setModalType, closeIngredientModal, saveIngredientModal,
           isEditingRecipeName, editingRecipeName, renameInputRef, confirmDeleteRecipe,
           createNewRecipe, startRenameRecipe, saveRenameRecipe, duplicateRecipe, handleDeleteRecipe,
-          updateIngredientPct, totalBakerPct, totalActiveMolds, targetFlourWeight, yudaneFlour, yudaneWater, yudaneTotal, yudaneWaterWarning,
+          formatWeight, updateIngredientPct, totalBakerPct, totalActiveMolds, targetFlourWeight, yudaneFlour, yudaneWater, yudaneTotal, yudaneWaterWarning,
           computedIngredients, totalDoughWeight, hydrationPct,
           timers, activeRunningTimer, toggleTimer, assignTimer, setCustomTimerMins, resetTimer, formatSeconds, suggestedStartTime,
           ensurePurchaseItem, calcItemBatchCost, autoMoldCount, batchIngredientCost, unitTotalCost, suggestedPrice, unitProfit,
-          newLog, addLog, addIngredient, removeIngredient, exportBackup, importBackup
+          diagnostics, newLog, addLog, addIngredient, removeIngredient, exportBackup, importBackup
         };
       }
     }).mount('#app');
